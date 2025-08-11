@@ -1,0 +1,2934 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Solicitação de Materiais - KAEFER Teckma Engenharia</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- SheetJS (js-xlsx) CDN -->
+<script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+<style>
+        :root {
+            --kaefer-blue: #0072B8;
+            --kaefer-blue-dark: #005a91;
+            --kaefer-red: #D32F2F;
+            --kaefer-yellow: #FFC107;
+            --kaefer-green: #388E3C;
+        }
+
+        .priority-high { background-color: #f8caca !important; color: var(--kaefer-red); }
+        .priority-medium { background-color: #fff3cd !important; color: #856404; }
+        .priority-low { background-color: #d4edda !important; color: #155724; }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: var(--kaefer-blue); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--kaefer-blue-dark); }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .slide-in { animation: slideIn 0.3s ease-out; }
+
+        .body-login { overflow: hidden; height: 100vh; }
+
+        #lowStockAlert {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            z-index: 10;
+            max-width: 300px;
+        }
+        @media (max-width: 768px) {
+            #lowStockAlert {
+                position: relative;
+                top: auto;
+                left: auto;
+                margin-bottom: 1rem;
+            }
+        }
+
+        /* Estilos para os botões de ação na tabela de compras */
+        .icon-btn {
+            cursor: pointer;
+            font-size: 1.2em;
+            margin: 0 4px;
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            border-radius: 4px;
+        }
+        .icon-btn.aprove {
+    color: #28a745;
+    border: none;
+    background: transparent;
+}
+        .icon-btn.aprove:hover {
+            background-color: #28a745;
+            color: white;
+        }
+        .icon-btn.reprove {
+    color: #dc3545;
+    border: none;
+    background: transparent;
+}
+        .icon-btn.reprove:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+        .icon-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            border-color: #ccc;
+            color: #ccc;
+        }
+
+        /* Estilos para o texto de status na tabela de compras */
+        .status-text {
+            font-weight: bold;
+        }
+        .aguardando-text {
+            color: #ffc107; /* Yellow */
+        }
+        .aprovado-text {
+            color: #28a745; /* Green */
+        }
+        .reprovado-text {
+            color: #dc3545; /* Red */
+        }
+        .reprovado-icon {
+            color: #dc3545;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+    </style>
+<style>
+  td button, td span[onclick], td div[onclick] {
+    cursor: pointer;
+  }
+</style>
+<style>
+/* ==== Dashboard Grid Fix (uniform height/order/no overlap) ==== */
+#dashboardGrid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+@media (max-width: 1024px) {
+  #dashboardGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  #dashboardGrid { grid-template-columns: 1fr; }
+}
+.dashboard-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.dashboard-card > canvas {
+  width: 100% !important;
+  height: 220px !important;
+}
+</style>
+<style>
+/* Order utilities for dashboard (fallback if Tailwind order-* not applied) */
+.dashboard-card.order-1 { order: 1; }
+.dashboard-card.order-2 { order: 2; }
+.dashboard-card.order-3 { order: 3; }
+.dashboard-card.order-4 { order: 4; }
+.dashboard-card.order-5 { order: 5; }
+.dashboard-card.order-6 { order: 6; }
+</style>
+</head>
+<body class="bg-gray-50">
+<!-- Login Screen com imagem de fundo -->
+<div class="relative bg-cover bg-center flex items-center justify-center" id="loginScreen" style="background-image: url('https://i.postimg.cc/tC067ZNG/TKLOGIN-Obra.png'); height: 100vh; overflow: hidden;">
+<div class="bg-white/80 shadow-lg rounded-lg p-8 w-full max-w-sm text-center backdrop-blur-sm">
+<img alt="Logo KAEFER Teckma" class="mx-auto mb-6 h-20" src="https://www.kaeferteckma.com.br/2019/wp-content/uploads/2024/05/KTE_Logo_RGB-transp-.png"/>
+<h1 class="text-xl font-bold text-gray-800 mb-4">Acesso ao Sistema</h1>
+<input class="border border-gray-300 p-2 mb-3 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-500" id="user" placeholder="Usuário" type="text"/>
+<input class="border border-gray-300 p-2 mb-4 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-500" id="pass" placeholder="Senha" type="password"/>
+<button class="bg-[#0072B8] hover:bg-[#005a91] text-white px-4 py-2 rounded w-full font-semibold" id="btnLogin">Entrar</button>
+<p class="text-red-600 mt-3 hidden text-sm" id="loginError">Usuário ou senha inválidos</p>
+</div>
+</div>
+<div class="hidden container mx-auto px-4 py-8 max-w-6xl relative" id="app">
+<!-- Top bar com usuário logado -->
+<div class="w-full flex justify-end mb-4 pr-1">
+<div class="hidden bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-2 text-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-2" id="lowStockAlert" role="alert">
+<div class="flex items-center gap-2">
+<i class="fa-solid fa-triangle-exclamation"></i>
+<p class="font-bold">Atenção!</p>
+<p>Estoque baixo.</p>
+</div>
+<button class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-xs self-end md:self-center" onclick="openLowStockModal()">
+      Ver Materiais
+    </button>
+</div>
+<div class="flex flex-col items-end gap-2">
+<div class="flex items-center gap-4">
+<div class="text-sm text-gray-700">
+<i class="fa-solid fa-user text-gray-500"></i> <span class="text-sm">Usuário:</span> <span class="font-semibold text-blue-600" id="usuarioLogado"></span>
+<span class="ml-2 text-xs px-2 py-1 rounded-full" id="badgePermissao"></span>
+</div>
+<button class="bg-red-600 text-white px-3 py-1 rounded text-sm" onclick="logout()">Sair</button>
+</div>
+<div class="flex gap-2">
+<button class="bg-gray-300 text-gray-800 px-3 py-1 rounded text-sm hover:bg-gray-400" onclick="abrirConfiguracoes()">
+    ⚙️ Configurações
+  </button>
+<button class="bg-gray-300 text-gray-800 px-3 py-1 rounded text-sm hover:bg-gray-400" onclick="abrirDashboard()">
+    📊 Dashboard
+  </button>
+</div>
+</div>
+</div>
+<div class="flex flex-col items-center justify-center text-center mb-8">
+<div>
+<h1 class="text-3xl font-bold text-gray-800">SOLICITAÇÃO DE MATERIAIS</h1>
+<p class="text-gray-600">Sistema de gestão de requisições</p>
+</div>
+</div>
+<h1 class="text-2xl font-bold mb-4">Solicitação de Materiais</h1>
+<form class="bg-white p-4 rounded shadow space-y-4" id="solicitacaoForm">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1" for="solicitante">Solicitante *</label>
+<input class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-800 shadow-sm" id="solicitante" readonly=""/>
+<input id="nomeSolicitante" name="nomeSolicitante" type="hidden"/>
+</div>
+<div>
+<label class="block font-semibold mb-1" for="prioridade">Prioridade</label>
+<select class="w-full border p-2 rounded" id="prioridade" required="">
+<option value="Baixa">Baixa (Entrega em 4 horas)</option>
+<option value="Média">Média (Entrega em 2 horas)</option>
+<option value="Alta">Alta (Entrega imediata)</option>
+</select>
+</div>
+</div>
+<div>
+<label class="block font-semibold mb-1" for="materialSearch">Buscar Material</label>
+<input class="w-full border p-2 rounded mb-2" id="materialSearch" placeholder="Digite código ou descrição..." type="text"/>
+</div>
+<div>
+<label class="block font-semibold mb-1" for="material">Material *</label>
+<select class="w-full border p-2 rounded bg-white" id="material" required="" size="8"></select>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div>
+<label class="block font-semibold mb-1">Estoque disponível</label>
+<div class="bg-gray-100 p-2 rounded text-center w-full min-h-[42px]" id="estoqueInfo">--</div>
+<div class="mt-2">
+<button class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm hidden" id="addEstoqueBtn" onclick="abrirAdicionarEstoque()" type="button">
+<i class="fa-solid fa-plus"></i> Gerenciar Estoque
+  </button>
+</div>
+</div>
+<div>
+<label class="block font-semibold mb-1">Quantidade</label>
+<div class="flex w-full min-h-[42px]">
+<button class="px-3 bg-gray-200 rounded-l" id="decreaseQty" type="button">-</button>
+<input class="text-center w-full border-y border-gray-300" id="quantidade" min="1" type="number" value="1"/>
+<button class="px-3 bg-gray-200 rounded-r" id="increaseQty" type="button">+</button>
+</div>
+</div>
+<div>
+<label class="block font-semibold mb-1">Localização</label>
+<div class="bg-gray-100 p-2 rounded text-center w-full min-h-[42px]" id="localizacao">--</div>
+</div>
+</div>
+<div class="flex justify-end gap-2 pt-2">
+<button class="border px-4 py-2 rounded" type="reset">Limpar</button>
+<button class="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50" disabled="" id="btnSolicitar" type="submit">Enviar</button>
+</div>
+</form>
+<div class="hidden p-3 rounded bg-gray-100 text-gray-800" id="feedback"></div>
+<!-- Material Requests Table -->
+<div class="container mx-auto px-4 py-8 max-w-6xl">
+<div class="bg-white p-6 rounded-xl shadow border border-gray-200">
+<h2 class="text-2xl font-bold text-[#0072B8] flex items-center gap-2 mb-4">
+<i class="fa-solid fa-box-open"></i> Solicitações de Materiais
+  </h2>
+<div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-2">
+<div class="flex items-center hidden" id="statusFilterContainer">
+<label class="font-semibold mr-2" for="statusFilter">Filtrar por status:</label>
+<select class="border p-1 rounded" id="statusFilter">
+<option value="Todos">Todos</option>
+<option value="Pendente">Pendentes</option>
+<option value="Entregue">Entregues</option>
+<option value="Cancelado">Canceladas</option>
+</select>
+</div>
+<button class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm hidden" id="exportRequestsBtn" onclick="exportToExcel()">
+<i class="fa-solid fa-file-excel"></i> Exportar para Excel
+  </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-sm text-left border border-gray-200 rounded overflow-hidden" id="requestsTable">
+<thead class="bg-[#E3F2FD] text-[#003d66] text-sm font-semibold">
+<tr>
+<th class="py-2 px-3 border-b border-gray-300">ID</th>
+<th class="py-2 px-3 border-b border-gray-300">Material</th>
+<th class="py-2 px-3 border-b border-gray-300">Qtd</th>
+<th class="py-2 px-3 border-b border-gray-300">Prioridade</th>
+<th class="py-2 px-3 border-b border-gray-300">Status</th>
+<th class="py-2 px-3 border-b border-gray-300">Solicitante</th>
+<th class="py-2 px-3 border-b border-gray-300">Data Solicitação</th><th class="py-2 px-3 border-b border-gray-300">Data Finalização</th>
+<th class="py-2 px-3 border-b border-gray-300">Ações</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-100 bg-white" id="requestsTableBody"></tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Purchase Requests Table -->
+<div class="container mx-auto px-4 py-8 max-w-6xl mt-6">
+<div class="bg-white p-6 rounded-xl shadow border border-gray-200">
+<div class="px-3 py-2 border-b flex items-center justify-between">
+<h2 class="text-xl font-bold text-blue-800 flex items-center">
+<svg class="w-6 h-6 mr-2 text-blue-800" fill="currentColor" viewbox="0 0 20 20"><path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v2H3V3zM3 6h14v11a1 1 0 01-1 1H4a1 1 0 01-1-1V6zm4 2a1 1 0 100 2h6a1 1 0 100-2H7z"></path></svg>
+        Solicitação de Compras
+      </h2>
+</div>
+<div class="overflow-x-auto p-3">
+<table class="w-full text-sm text-left border border-gray-200 rounded overflow-hidden" id="comprasTable">
+<thead class="bg-[#E3F2FD] text-[#003d66] text-sm font-semibold">
+<tr>
+<th class="py-2 px-3">ID</th>
+<th class="py-2 px-3">Material</th>
+<th class="py-2 px-3">Qtd</th>
+<th class="py-2 px-3">Prioridade</th>
+<th class="py-2 px-3">Status</th>
+<th class="py-2 px-3">Solicitante</th>
+<th class="py-2 px-3">AP1</th>
+<th class="py-2 px-3">AP2</th>
+<th class="py-2 px-3">AP3</th>
+<th class="py-2 px-3">Ações</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-200 bg-white" id="comprasTableBody"></tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Modal de Configuração Interna -->
+<div class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" id="configScreen">
+<div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full overflow-y-auto max-h-[90vh] relative">
+<button class="absolute top-3 right-3 text-gray-500 hover:text-red-600 text-xl font-bold" onclick="fecharConfig()">
+  ×
+</button>
+<h2 class="text-xl font-bold text-gray-800 mb-4">Configurações de Prioridades</h2>
+<form class="space-y-4">
+<div>
+<label class="block font-medium">Tempo Alta</label>
+<input class="w-full border p-2 rounded" id="tempoAlta" type="text"/>
+</div>
+<div>
+<label class="block font-medium">Tempo Média</label>
+<input class="w-full border p-2 rounded" id="tempoMedia" type="text"/>
+</div>
+<div>
+<label class="block font-medium">Tempo Baixa</label>
+<input class="w-full border p-2 rounded" id="tempoBaixa" type="text"/>
+</div>
+<div class="flex justify-end gap-2">
+<button class="bg-blue-600 text-white px-4 py-2 rounded" onclick="salvarConfiguracoes()" type="button">Salvar</button>
+<button class="border px-4 py-2 rounded" onclick="fecharConfig()" type="button">Fechar</button>
+</div>
+</form>
+<hr class="my-6 border-t border-gray-300"/>
+<!-- Gerenciar Usuários (Admin) -->
+<div class="mt-6">
+<h2 class="text-lg font-bold text-gray-800 mb-2">Gerenciar Usuários</h2>
+<div class="space-y-2 mb-4">
+<input class="w-full p-2 border rounded" id="novoUsuario" placeholder="Novo Usuário" type="text"/>
+<input class="w-full p-2 border rounded" id="senhaUsuario" placeholder="Senha" type="password"/>
+<select class="w-full p-2 border rounded" id="permissaoUsuario">
+<option value="solicitante">Solicitante</option>
+<option value="admin">Admin</option>
+<option value="mista">Mista</option>
+<option value="master">Master</option>
+</select>
+<select class="w-full p-2 border rounded" id="aprovadorUsuario">
+<option value="">Não é Aprovador</option>
+<option value="ap1">Aprovador 1</option>
+<option value="ap2">Aprovador 2</option>
+<option value="ap3">Aprovador 3</option>
+</select>
+<button class="bg-green-600 text-white px-4 py-2 rounded" onclick="cadastrarUsuario()">Cadastrar</button>
+</div>
+<table class="w-full mt-2 border">
+<thead class="bg-gray-100">
+<tr><th class="p-2">Usuário</th><th class="p-2">Permissão</th><th class="p-2">Aprovador</th><th class="p-2">Ações</th></tr>
+</thead>
+<tbody class="text-sm" id="tabelaUsuarios"></tbody>
+</table>
+</div>
+<hr class="my-6 border-t border-gray-300"/>
+<div class="mt-6">
+<h2 class="text-lg font-bold text-gray-800 mb-2">Limpar Histórico</h2>
+<button class="bg-red-600 text-white px-4 py-2 rounded w-full hover:bg-red-700 mb-2" onclick="limparHistoricoSolicitacoes()">
+<i class="fa-solid fa-eraser"></i> Limpar Histórico de Solicitações
+  </button>
+<button class="bg-red-600 text-white px-4 py-2 rounded w-full hover:bg-red-700" onclick="limparHistoricoCompras()">
+<i class="fa-solid fa-trash"></i> Apagar histórico de Compras
+</button>
+</div>
+</div>
+</div>
+<!-- Modal Adicionar Estoque -->
+<div class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" id="estoqueScreen">
+<div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full overflow-y-auto max-h-[90vh] relative">
+<button class="absolute top-3 right-3 text-gray-500 hover:text-red-600 text-xl font-bold" onclick="fecharAdicionarEstoque()">
+      ×
+    </button>
+<h2 class="text-xl font-bold text-gray-800 mb-4">Gerenciar Estoque</h2>
+<div class="space-y-3">
+<h3 class="text-lg font-semibold mt-4">Adicionar Novo Material</h3>
+
+    <!-- KPI Cards: Resumo do Estoque -->
+    <div id="kpisResumo" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div class="bg-white rounded-xl border border-gray-200 shadow p-4 flex items-center gap-3">
+        <div class="text-[#0072B8] text-2xl"><i class="fa-solid fa-box"></i></div>
+        <div>
+          <div class="text-sm text-gray-500">Itens totais</div>
+          <div id="kpiItensTotais" class="text-2xl font-bold text-gray-800">--</div>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl border border-gray-200 shadow p-4 flex items-center gap-3">
+        <div class="text-yellow-500 text-2xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div>
+          <div class="text-sm text-gray-500">Estoque baixo (≤ 5)</div>
+          <div id="kpiEstoqueBaixo" class="text-2xl font-bold text-gray-800">--</div>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl border border-gray-200 shadow p-4 flex items-center gap-3">
+        <div class="text-green-600 text-2xl"><i class="fa-solid fa-circle-check"></i></div>
+        <div>
+          <div class="text-sm text-gray-500">Itens entregues</div>
+          <div id="kpiItensEntregues" class="text-2xl font-bold text-gray-800">--</div>
+        </div>
+      </div>
+    </div>
+
+<input class="w-full p-2 border rounded" id="novoCodigo" placeholder="Código do material" type="text"/>
+<input class="w-full p-2 border rounded" id="novaDescricao" placeholder="Descrição" type="text"/>
+<input class="w-full p-2 border rounded" id="novaQuantidade" placeholder="Quantidade" type="number"/>
+<input class="w-full p-2 border rounded" id="novaUnidade" placeholder="Unidade (ex: Pç, mm)" type="text"/>
+<input class="w-full p-2 border rounded" id="novaLocalizacao" placeholder="Localização" type="text"/>
+<input class="w-full p-2 border rounded" id="novoPeso" placeholder="Peso (ex: 1.5 kg)" type="text"/>
+</div>
+<div class="flex justify-end gap-2 mt-4">
+<button class="border px-4 py-2 rounded" onclick="fecharAdicionarEstoque()">Cancelar</button>
+<button class="bg-green-600 text-white px-4 py-2 rounded" onclick="salvarNovoEstoque()">Salvar</button>
+</div>
+<hr class="my-6 border-t border-gray-300"/>
+<h3 class="text-lg font-semibold mt-4">Materiais Existentes</h3>
+<div class="space-y-2 max-h-48 overflow-y-auto border p-2 rounded" id="existingMaterialsList">
+<!-- Existing materials will be listed here -->
+</div>
+<hr class="my-6 border-t border-gray-300"/>
+<h3 class="text-lg font-semibold mt-4">Importar Estoque (Excel/CSV)</h3>
+<p class="text-sm text-gray-600 mb-2">Formato esperado: Código,Descrição,Quantidade,Unidade,Localização,Peso</p>
+<button class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1 rounded text-sm mb-2" onclick="downloadStockTemplate()">
+<i class="fa-solid fa-download"></i> Baixar Template Excel
+    </button>
+<input accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" class="w-full p-2 border rounded mb-2" id="importStockFile" type="file"/>
+<div class="flex justify-end gap-2 mt-4">
+<button class="bg-blue-600 text-white px-4 py-2 rounded" onclick="handleImportStockFile()">
+<i class="fa-solid fa-upload"></i> Importar
+      </button>
+</div>
+<hr class="my-6 border-t border-gray-300"/>
+<div class="mt-4 text-center">
+<button class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm hidden" id="exportStockBtn" onclick="exportStockToCsv()">
+<i class="fa-solid fa-file-csv"></i> Exportar Estoque (CSV)
+      </button>
+</div>
+<button class="bg-red-600 text-white px-4 py-2 rounded w-full hover:bg-red-700 mt-4" onclick="limparEstoque()">
+<i class="fa-solid fa-trash"></i> Limpar Estoque
+    </button>
+</div>
+</div>
+<!-- Novo Modal para Materiais com Estoque Baixo -->
+<div class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" id="lowStockModal">
+<div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full overflow-y-auto max-h-[90vh] relative">
+<button class="absolute top-3 right-3 text-gray-500 hover:text-red-600 text-xl font-bold" onclick="closeLowStockModal()">
+      ×
+    </button>
+<h2 class="text-xl font-bold text-gray-800 mb-4">Materiais com Estoque Baixo</h2>
+<div class="space-y-2" id="lowStockList">
+<!-- Lista de materiais com estoque baixo será populada aqui -->
+</div>
+<div class="flex justify-end gap-2 mt-4">
+<button class="border px-4 py-2 rounded" onclick="closeLowStockModal()">Fechar</button>
+</div>
+</div>
+</div>
+<script>
+    let currentUser = "";
+    let currentUserPermissao = ""; // Added to store current user's permission
+    let currentUserApprover = ""; // Added to store current user's approver role
+    const usuariosKey = "usuarios";
+    const LOW_STOCK_THRESHOLD = 5;
+
+    let materiais = JSON.parse(localStorage.getItem("materiais")) || {
+        "FST001011": { "descricao": "FLANGE SOLTO AC ASTM A105 150# B16.5 ZINCADO A FOGO", "quantidade": 4, "unit": "Pç", "location": "Almoxarifado Central", "weight": "34.4" },
+        "TUB298020": { "descricao": "TUBO AI ASTM A358 TP304L CL2 C/C SCH STD ASME B36.19", "quantidade": 4, "unit": "mm", "location": "Almoxarifado Central", "weight": "390.7" },
+        "C90196008": { "descricao": "CURVA 90 GR RL AI A403 CR304L 10S MSS SP43", "quantidade": 6, "unit": "Pç", "location": "Almoxarifado Central", "weight": "6.96" },
+        "FPE096012": { "descricao": "FLANGE PESC AC ASTM A105 300# SCH 40 ANSI B16.5", "quantidade": 2, "unit": "Pç", "location": "Almoxarifado Central", "weight": "62.6" },
+        "TUB050013": { "descricao": "TUBO AI ASTM A312 TP304L C/C SCH 40S", "quantidade": 6, "unit": "mm", "location": "Almoxarifado Central", "weight": "73.70" },
+        "PES196009": { "descricao": "PESTANA AI ASTM A403 GR WP304L-W SCH 40S MSS SP43", "quantidade": 8, "unit": "Pç", "location": "Almoxarifado Central", "weight": "14.48" },
+        "FST002009": { "descricao": "FLANGE SOLTO AC ASTM A105 300#", "quantidade": 7, "unit": "Pç", "location": "Almoxarifado Central", "weight": "87.2" },
+        "PES196012": { "descricao": "PESTANA AI ASTM A403 GR WP304L-W SCH 40S MSS SP43", "quantidade": 4, "unit": "Pç", "location": "Almoxarifado Central", "weight": "23.56" },
+        "PES216011": { "descricao": "PESTANA AI ASTM A403 GR WP304L-W SCH 5S MSS-SP-43", "quantidade": 4, "unit": "Pç", "location": "Almoxarifado Central", "weight": "4.2" },
+        "FST001006": { "descricao": "FLANGE SOLTO AC ASTM A105 150# B16.5 ZINCADO A FOGO", "quantidade": 2, "unit": "Pç", "location": "Almoxarifado Central", "weight": "4.6" },
+        "TUB115009": { "descricao": "TUBO AI ASTM A312 TP304L C/C SCH 5S ANSI B36.19", "quantidade": 26, "unit": "mm", "location": "Almoxarifado Central", "weight": "75.09" },
+        "TUB050009": { "descricao": "TUBO AI ASTM A312 TP304L C/C SCH 40S", "quantidade": 24, "unit": "mm", "location": "Almoxarifado Central", "weight": "69.9" },
+        "TUB115013": { "descricao": "TUBO AI ASTM A312 TP304L C/C SCH 5S ANSI B36.19", "quantidade": 14, "unit": "mm", "location": "Almoxarifado Central", "weight": "1800" },
+        "C90322011": { "descricao": "CURVA 90 GR RL AI ASTM A403 WP304L-W SCH 40S ANSI B16.9", "quantidade": 2, "unit": "Pç", "location": "Almoxarifado Central", "weight": "20.2" },
+        "MLV004006": { "descricao": "MEIA LUVA AI ASTM A182 F304L 3000# SW", "quantidade": 1, "unit": "Pç", "location": "Almoxarifado Central", "weight": "0.26" },
+        "REC122017": { "descricao": "RED CONC AI A403 CR304L SCH 5S MSS SP43", "quantidade": 1, "unit": "Pç", "location": "Almoxarifado Central", "weight": "0.34" },
+        "TUB315019": { "descricao": "TUBO AI ASTM A358 TP304L CL2 C/C SCH 5S ANSI B36.19", "quantidade": 3, "unit": "mm", "location": "Almoxarifado Central", "weight": "76.8" },
+        "TUB005009": { "descricao": "TUBO AC ASTM A106 GR B S/C SCH 40", "quantidade": 3, "unit": "mm", "location": "Almoxarifado Central", "weight": "4.071" },
+        "MLV001006": { "descricao": "MEIA LUVA AC ASTM A105 3000# SW B16.11", "quantidade": 1, "unit": "Pç", "location": "Almoxarifado Central", "weight": "0.26" },
+        "C45122014": { "descricao": "CURVA 45 GR RL A403 CR304L SCH 5S MSS SP43", "quantidade": 1, "unit": "Pç", "location": "Almoxarifado Central", "weight": "9.65" },
+        "TUB115008": { "descricao": "TUBO AI ASTM A312 TP304L C/C SCH 5S ANSI B36.19", "quantidade": 30, "unit": "mm", "location": "Almoxarifado Central", "weight": "60" },
+        "C90195005": { "descricao": "CURVA 90 GR RL AI ASTM A403 CR304L SCH5S MSS SP43", "quantidade": 18, "unit": "Pç", "location": "Almoxarifado Central", "weight": "11.16" },
+        "TEE071005": { "descricao": "TE AI ASTM A403 WP304L SCH 5S MSS-SP-43", "quantidade": 2, "unit": "Pç", "location": "Almoxarifado Central", "weight": "0.58" },
+        "C45122005": { "descricao": "CURVA 45 GR RL AI ASTM A403 CR304L SCH5S MSS SP43", "quantidade": 4, "unit": "Pç", "location": "Almoxarifado Central", "weight": "0.36" },
+        "REC207020": { "descricao": "REDUCAO CONC AI ASTM A403 WP304L-W SCH 40S ANSI B16.9", "quantidade": 1, "unit": "Pç", "location": "Almoxarifado Central", "weight": "1.27" },
+        "FST002005": { "descricao": "FLANGE SOLTO AC ASTM A105 300#", "quantidade": 1, "unit": "Pç", "location": "Almoxarifado Central", "weight": "2.9" },
+        "C45307005": { "descricao": "CURVA 45 GR RL AI ASTM A403 WP304L-W SCH 40S ANSI B16.9", "quantidade": 10, "unit": "Pç", "location": "Almoxarifado Central", "weight": "1.9" },
+        "FPE096008": { "descricao": "FLANGE PESC AC ASTM A105 300# SCH 40 ANSI B16.5", "quantidade": 1, "unit": "Pç", "location": "Almoxarifado Central", "weight": "6.6" },
+        "FST002011": { "descricao": "FLANGE SOLTO AC ASTM A105 300#", "quantidade": 2, "unit": "Pç", "location": "Almoxarifado Central", "weight": "35.4" },
+        "PES196011": { "descricao": "PESTANA AI ASTM A403 GR WP304L-W SCH 40S MSS SP43", "quantidade": 2, "unit": "Pç", "location": "Almoxarifado Central", "weight": "7.44" },
+        "REX197027": { "descricao": "REDUCAO EXC AI ASTM A403 WP304L-W SCH 40S ANSI B16.9", "quantidade": 1, "unit": "Pç", "location": "Almoxarifado Central", "weight": "6.49" },
+        "C90322012": { "descricao": "CURVA 90 GR RL AI ASTM A403 WP304L-W SCH 40S ANSI B16.9", "quantidade": 10, "unit": "Pç", "location": "Almoxarifado Central", "weight": "213" },
+        "REX184039": { "descricao": "REDUCAO EXC AI A403 GR WP304L-W SCH STD ANSI B16.9", "quantidade": 1, "unit": "Pç", "location": "Almoxarifado Central", "weight": "33.1" },
+        "C90322013": { "descricao": "CURVA 90 GR RL AI ASTM A403 WP304L-W SCH 40S ANSI B16.9", "quantidade": 4, "unit": "Pç", "location": "Almoxarifado Central", "weight": "150.4" },
+        "REX197032": { "descricao": "REDUCAO EXC AI ASTM A403 WP304L-W SCH 40S ANSI B16.9", "quantidade": 1, "unit": "Pç", "location": "Almoxarifado Central", "weight": "15" },
+        "TUB050005": { "descricao": "TUBO AI ASTM A312 TP304L C/C SCH 40S", "quantidade": 6, "unit": "mm", "location": "Almoxarifado Central", "weight": "7.5" },
+        "TUB050004": { "descricao": "TUBO AI ASTM A312 TP304L C/C SCH 40S", "quantidade": 20, "unit": "mm", "location": "Almoxarifado Central", "weight": "17.0" },
+        "TUB115015": { "descricao": "TUBO AI ASTM A312 TP304L C/C SCH 5S ANSI B36.19", "quantidade": 20, "unit": "mm", "location": "Almoxarifado Central", "weight": "688.8" },
+        "TUB315022": { "descricao": "TUBO AI ASTM A358 TP304L CL2 C/C SCH 5S ANSI B36.19", "quantidade": 6, "unit": "mm", "location": "Almoxarifado Central", "weight": "1234.6" },
+        "C45122018": { "descricao": "CURVA 45 GR RL A403 CR304L SCH 5S MSS SP43", "quantidade": 4, "unit": "Pç", "location": "Almoxarifado Central", "weight": "164" },
+        "FPA112008": { "descricao": "FLANGE PAD - 300# - ASTM A240 Gr 304L - B23014-0069 - TIPO 1", "quantidade": 18, "unit": "Pç", "location": "Almoxarifado Central", "weight": "0" },
+        "FPA111008": { "descricao": "FLANGE PAD - 150# - ASTM A240 Gr 304L - B23014-0068 - TIPO 1", "quantidade": 2, "unit": "Pç", "location": "Almoxarifado Central", "weight": "0" },
+        "FG8001017": { "descricao": "FIGURA OITO AC ASTM A283 GR C 150# DES B33014-0052", "quantidade": 4, "unit": "Pç", "location": "Almoxarifado Central", "weight": "0" },
+        "FG8009020": { "descricao": "FIGURA OITO AI ASTM A240 304L 300# CONF B33014-0052", "quantidade": 1, "unit": "Pç", "location": "Almoxarifado Central", "weight": "0" },
+        "FG8003019": { "descricao": "FIGURA OITO AC ASTM A283 GR C 300# DES B33014-0052", "quantidade": 2, "unit": "Pç", "location": "Almoxarifado Central", "weight": "0" },
+        "CET001029": { "descricao": "PARAFUSO ESTOJO ASTM A193 GR B7 CL 2A & PORCAS SEXT PES ASTM A194 GR 2H", "quantidade": 8, "unit": "Pç", "location": "Almoxarifado Central", "weight": "0" },
+        "FG8009017": { "descricao": "FIGURA OITO AI ASTM A240 304L 300# CONF B33014-0052", "quantidade": 1, "unit": "Pç", "location": "Almoxarifado Central", "weight": "0" },
+        "ENR000049": { "descricao": "ENG RAPIDO MACHO P/ MANG DN 1\" C/ ROSCA NPT INOX 316L REF UEL FIG.21", "quantidade": 1, "unit": "Pç", "location": "Almoxarifado Central", "weight": "0" }
+    };
+
+    function inicializarUsuarios() {
+        const usuariosFixos = {
+            "admin": { senha: "2025", permissao: "admin", nomeCompleto: "Admin (ADM)", aprovador: "" },
+            "Ricardo": { senha: "1234", permissao: "master", nomeCompleto: "Ricardo (SUP)", aprovador: "ap1" },
+            "Sabino": { senha: "1234", permissao: "master", nomeCompleto: "Sabino (GP)", aprovador: "ap2" },
+            "Pablo": { senha: "1234", permissao: "master", nomeCompleto: "Pablo (CO)", aprovador: "ap3" },
+            "Simone": { senha: "1234", permissao: "solicitante", nomeCompleto: "Simone (ENC)", aprovador: "" },
+            "Vinicius": { senha: "1234", permissao: "solicitante", nomeCompleto: "Vinicius (SOL)", aprovador: "" },
+            "Teste": { senha: "123", permissao: "mista", nomeCompleto: "Teste (Mista)", aprovador: "" }
+        };
+        let usuariosAtuais = JSON.parse(localStorage.getItem(usuariosKey));
+        if (!usuariosAtuais) {
+            localStorage.setItem(usuariosKey, JSON.stringify(usuariosFixos));
+        } else {
+            let alterado = false;
+            for (let nome in usuariosFixos) {
+                if (!usuariosAtuais[nome]) {
+                    usuariosAtuais[nome] = usuariosFixos[nome];
+                    alterado = true;
+                } else {
+                    // Ensure nomeCompleto and aprovador are present for existing users
+                    if (!usuariosAtuais[nome].nomeCompleto) {
+                        usuariosAtuais[nome].nomeCompleto = usuariosFixos[nome].nomeCompleto;
+                        alterado = true;
+                    }
+                    if (usuariosAtuais[nome].aprovador === undefined) {
+                        usuariosAtuais[nome].aprovador = usuariosFixos[nome].aprovador;
+                        alterado = true;
+                    }
+                }
+            }
+            if (alterado) {
+                localStorage.setItem(usuariosKey, JSON.stringify(usuariosAtuais));
+            }
+        }
+    }
+
+    let usuarios = JSON.parse(localStorage.getItem(usuariosKey));
+
+    function login() {
+        const u = document.getElementById("user").value.trim();
+        const p = document.getElementById("pass").value.trim();
+
+        usuarios = JSON.parse(localStorage.getItem(usuariosKey));
+
+        if (usuarios[u] && usuarios[u].senha === p) {
+            document.body.classList.remove("body-login");
+            currentUser = u;
+            currentUserPermissao = usuarios[u].permissao; // Store permission
+            currentUserApprover = usuarios[u].aprovador; // Store approver role
+            document.getElementById("loginScreen").style.display = "none";
+            document.getElementById("app").classList.remove("hidden");
+            document.getElementById("usuarioLogado").textContent = usuarios[u].nomeCompleto; // Show full name
+            document.getElementById("loginError").classList.add("hidden");
+
+            if (currentUserPermissao === "admin" || currentUserPermissao === "mista") {
+                document.getElementById("statusFilterContainer").classList.remove("hidden");
+                document.getElementById("exportRequestsBtn").classList.remove("hidden");
+                document.getElementById("addEstoqueBtn").classList.remove("hidden");
+                checkLowStock();
+            } else {
+                document.getElementById("statusFilterContainer").classList.add("hidden");
+                document.getElementById("exportRequestsBtn").classList.add("hidden");
+                document.getElementById("addEstoqueBtn").classList.add("hidden");
+                document.getElementById("lowStockAlert").classList.add("hidden");
+            }
+
+            const badge = document.getElementById("badgePermissao");
+            badge.textContent = currentUserPermissao.charAt(0).toUpperCase() + currentUserPermissao.slice(1);
+            badge.className = "ml-2 text-xs px-2 py-1 rounded-full";
+            if (currentUserPermissao === "admin") {
+                badge.classList.add("bg-red-100", "text-red-800");
+            } else if (currentUserPermissao === "mista") {
+                badge.classList.add("bg-purple-100", "text-purple-800");
+            } else if (currentUserPermissao === "master") {
+                badge.classList.add("bg-orange-100", "text-orange-800");
+            }
+            else {
+                badge.classList.add("bg-blue-100", "text-blue-800");
+            }
+
+            document.getElementById("solicitante").value = usuarios[u].nomeCompleto; // Auto-fill with full name
+            document.getElementById("nomeSolicitante").value = usuarios[u].nomeCompleto; // Set hidden field
+            populateMaterialDropdown();
+            loadRequestsTable();
+            loadComprasTable(); // Load purchase requests
+            aplicarTempos();
+            updateApprovalButtonsVisibility(); // Update button visibility on login
+        } else {
+            document.getElementById("loginError").classList.remove("hidden");
+        }
+    }
+
+    function logout() {
+        location.reload();
+    }
+
+    function populateMaterialDropdown() {
+        const matSel = document.getElementById("material");
+        matSel.innerHTML = "";
+        for (let code in materiais) {
+            const m = materiais[code];
+            const opt = document.createElement("option");
+            opt.value = code;
+            opt.textContent = `${code} - ${m.descricao}`;
+            opt.dataset.stock = m.quantidade;
+            opt.dataset.location = m.location;
+            opt.dataset.unit = m.unit;
+            opt.dataset.weight = m.weight;
+            matSel.appendChild(opt);
+        }
+    }
+
+    document.getElementById("materialSearch").addEventListener("input", function () {
+        const termo = this.value.toLowerCase();
+        [...document.getElementById("material").options].forEach(opt => {
+            opt.style.display = opt.textContent.toLowerCase().includes(termo) ? "" : "none";
+        });
+    });
+
+    document.getElementById("material").addEventListener("change", function () {
+        const opt = this.selectedOptions[0];
+        if (opt) {
+            document.getElementById("estoqueInfo").textContent = `${opt.dataset.stock} ${opt.dataset.unit} (${opt.dataset.weight})`.replace(/\)$/, ' Kg)');
+            document.getElementById("localizacao").textContent = opt.dataset.location;
+        }
+        validateForm();
+    });
+
+    document.getElementById("quantidade").addEventListener("input", validateForm);
+
+    document.getElementById("increaseQty").onclick = () => {
+        const q = document.getElementById("quantidade");
+        q.value = parseInt(q.value) + 1;
+        validateForm();
+    };
+
+    document.getElementById("decreaseQty").onclick = () => {
+        const q = document.getElementById("quantidade");
+        if (parseInt(q.value) > 1) q.value = parseInt(q.value) - 1;
+        validateForm();
+    };
+
+    function validateForm() {
+        const m = document.getElementById("material").value;
+        const q = parseInt(document.getElementById("quantidade").value);
+        const p = document.getElementById("prioridade").value;
+        const s = document.getElementById("solicitante").value;
+        document.getElementById("btnSolicitar").disabled = !(m && q > 0 && p && s);
+    }
+
+    document.getElementById("solicitacaoForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const solicitante = document.getElementById("solicitante").value;
+        const materialCode = document.getElementById("material").value;
+        const materialDescription = document.getElementById("material").selectedOptions[0].textContent;
+        const requestedQuantidade = parseInt(document.getElementById("quantidade").value);
+        const prioridade = document.getElementById("prioridade").value;
+        const dataSolicitacao = new Date().toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+        const availableStock = parseInt(document.getElementById("material").selectedOptions[0]?.dataset.stock || 0);
+
+        if (requestedQuantidade <= availableStock) {
+            const id = Math.floor(Math.random() * 100000);
+
+            const tbody = document.getElementById("requestsTableBody");
+            const tr = document.createElement("tr");
+            tr.setAttribute('data-id', id);
+            tr.setAttribute('data-status', 'Pendente');
+            tr.setAttribute('data-solicitante', solicitante);
+
+            tr.innerHTML = `
+                <td>${id}</td>
+                <td>${materialCode} - ${materialDescription.split(' - ')[1]}</td>
+                <td>${requestedQuantidade}</td>
+                <td>${prioridade}</td>
+                <td>Pendente</td>
+                <td>${solicitante}</td>
+                <td>${dataSolicitacao}</td>
+                <td></td>
+                <td>
+                    <button onclick="concluir(this)">✔</button>
+                    <button onclick="excluir(this)">✖</button>
+                </td>`;
+            tbody.appendChild(tr);
+            saveRequestsTable();
+            showFeedback("Solicitação enviada com sucesso!", "bg-green-100", "text-green-700");
+            this.reset();
+            document.getElementById("estoqueInfo").textContent = "--";
+            document.getElementById("quantidade").value = "1";
+            document.getElementById("localizacao").textContent = "--";
+            populateMaterialDropdown();
+            document.getElementById("solicitante").value = usuarios[currentUser].nomeCompleto;
+            validateForm();
+        } else {
+            const missingQuantidade = requestedQuantidade - availableStock;
+            const confirmPurchase = confirm(`Só existem ${availableStock} unidades disponíveis. Deseja enviar as ${missingQuantidade} unidades restantes para a tabela de Solicitação de Compras?`);
+
+            if (confirmPurchase) {
+                if (availableStock > 0) {
+                    const idMaterialRequest = Math.floor(Math.random() * 100000);
+                    const tbodyMaterial = document.getElementById("requestsTableBody");
+                    const trMaterial = document.createElement("tr");
+                    trMaterial.setAttribute('data-id', idMaterialRequest);
+                    trMaterial.setAttribute('data-status', 'Pendente');
+                    trMaterial.setAttribute('data-solicitante', solicitante);
+                    trMaterial.innerHTML = `
+                        <td>${idMaterialRequest}</td>
+                        <td>${materialCode} - ${materialDescription.split(' - ')[1]}</td>
+                        <td>${availableStock}</td>
+                        <td>${prioridade}</td>
+                        <td>Pendente</td>
+                        <td>${solicitante}</td>
+                        <td>${dataSolicitacao}</td>
+                        <td></td>
+                        <td>
+                            <button onclick="concluir(this)">✔</button>
+                            <button onclick="excluir(this)">✖</button>
+                        </td>`;
+                    tbodyMaterial.appendChild(trMaterial);
+                    saveRequestsTable();
+                    showFeedback(`Solicitação de ${availableStock} unidades enviada para Materiais.`, "bg-green-100", "text-green-700");
+                } else {
+                    showFeedback("Estoque disponível é 0. Nenhuma solicitação de material foi criada.", "bg-yellow-100", "text-yellow-700");
+                }
+
+                adicionarNaTabelaCompras(materialCode, missingQuantidade, prioridade, solicitante);
+                showFeedback(`Solicitação de compra para ${missingQuantidade} unidades de ${materialCode} criada.`, "bg-blue-100", "text-blue-700");
+
+                this.reset();
+                document.getElementById("estoqueInfo").textContent = "--";
+                document.getElementById("quantidade").value = "1";
+                document.getElementById("localizacao").textContent = "--";
+                populateMaterialDropdown();
+                document.getElementById("solicitante").value = usuarios[currentUser].nomeCompleto;
+                validateForm();
+
+            } else {
+                alert("Por favor, ajuste a quantidade solicitada para continuar.");
+            }
+        }
+    });
+
+    function concluir(btn) {
+    if (!(currentUserPermissao === "admin" || currentUserPermissao === "mista" || currentUserPermissao === "master")) {
+        alert("Você não tem permissão para concluir solicitações.");
+        return;
+    }
+        const row = btn.closest("tr");
+        const dataFinal = new Date().toLocaleString("pt-BR", {
+            day: "2-digit", month: "2-digit", year: "numeric",
+            hour: "2-digit", minute: "2-digit"
+        });
+
+        const materialCellContent = row.cells[1].textContent;
+        const materialCode = materialCellContent.split(" - ")[0];
+
+        const originalSolicitante = row.getAttribute('data-solicitante');
+
+        const quantidadeSolicitada = parseInt(row.cells[2].textContent);
+        if (materiais[materialCode]) {
+            materiais[materialCode].quantidade -= quantidadeSolicitada;
+            localStorage.setItem("materiais", JSON.stringify(materiais));
+            populateMaterialDropdown();
+            checkLowStock();
+        }
+
+        row.cells[4].innerHTML = '<span class="text-green-700"><i class="fa-solid fa-check-circle"></i> Entregue</span>';
+        row.classList.add("priority-low");
+        row.setAttribute('data-status', 'Entregue');
+        row.cells[7].textContent = dataFinal;
+
+        [...row.querySelectorAll("button")].forEach(b => {
+            b.disabled = true;
+            b.classList.add("opacity-50", "cursor-not-allowed");
+        });
+
+        saveRequestsTable();
+
+        if (currentUser !== originalSolicitante) {
+            showFeedback(`Sua solicitação de ${materialCode} foi entregue!`, "bg-blue-100", "text-blue-700");
+        }
+    }
+
+    function excluir(btn) {
+        if (!(currentUserPermissao === "admin" || currentUserPermissao === "mista" || currentUserPermissao === "master")) {
+            alert("Você não tem permissão para cancelar solicitações.");
+            return;
+        }
+
+        const row = btn.closest("tr");
+        const dataFinal = new Date().toLocaleString("pt-BR", {
+            day: "2-digit", month: "2-digit", year: "numeric",
+            hour: "2-digit", minute: "2-digit"
+        });
+
+        const materialCellContent = row.cells[1].textContent;
+        const materialCode = materialCellContent.split(" - ")[0];
+
+        const originalSolicitante = row.getAttribute('data-solicitante');
+
+        row.cells[4].innerHTML = '<span class="text-red-700"><i class="fa-solid fa-times-circle"></i> Cancelado</span>';
+        row.classList.add("priority-high");
+        row.setAttribute('data-status', 'Cancelado');
+        row.cells[7].textContent = dataFinal;
+
+        [...row.querySelectorAll("button")].forEach(b => {
+            b.disabled = true;
+            b.classList.add("opacity-50", "cursor-not-allowed");
+        });
+        showFeedback("Solicitação cancelada.", "bg-red-100", "text-red-800");
+        saveRequestsTable();
+
+        if (currentUser !== originalSolicitante) {
+            showFeedback(`Sua solicitação de ${materialCode} foi cancelada.`, "bg-red-100", "text-red-700");
+        }
+    }
+
+    function saveRequestsTable() {
+        localStorage.setItem("solicitacoes", document.getElementById("requestsTableBody").innerHTML);
+    }
+
+    function loadRequestsTable() {
+        const saved = localStorage.getItem("solicitacoes");
+        if (saved) {
+            document.getElementById("requestsTableBody").innerHTML = saved;
+            document.querySelectorAll("#requestsTableBody button").forEach(button => {
+                if (!button.disabled) {
+                    if (button.textContent.includes("✔")) {
+                        button.onclick = function() { concluir(this); };
+                    } else if (button.textContent.includes("✖")) {
+                        button.onclick = function() { excluir(this); };
+                    }
+                }
+            });
+
+            document.querySelectorAll("#requestsTableBody tr").forEach(row => {
+                const status = row.getAttribute('data-status');
+                row.classList.remove('priority-low', 'priority-high', 'priority-medium');
+                if (status === 'Entregue') {
+                    row.classList.add('priority-low');
+                } else if (status === 'Cancelado') {
+                    row.classList.add('priority-high');
+                }
+            });
+        }
+        applyStatusFilter();
+    }
+
+    function applyStatusFilter() {
+        const selectedStatus = document.getElementById("statusFilter").value;
+        const rows = document.querySelectorAll("#requestsTableBody tr");
+        rows.forEach(row => {
+            const rowStatus = row.getAttribute('data-status');
+            if (selectedStatus === "Todos" || rowStatus === selectedStatus) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    }
+
+    document.getElementById("statusFilter").addEventListener("change", function() {
+        applyStatusFilter();
+    });
+
+    function showFeedback(msg, bg, text) {
+        const fb = document.getElementById("feedback");
+        fb.textContent = msg;
+        fb.className = `block p-3 rounded ${bg} ${text}`;
+        fb.classList.remove("hidden");
+        setTimeout(() => {
+            fb.classList.add("hidden");
+        }, 3000);
+    }
+
+    function checkLowStock() {
+        const lowStockMaterials = [];
+        for (const code in materiais) {
+            if (materiais[code].quantidade <= LOW_STOCK_THRESHOLD) {
+                lowStockMaterials.push({
+                    code: code,
+                    descricao: materiais[code].descricao,
+                    quantidade: materiais[code].quantidade,
+                    unit: materiais[code].unit
+                });
+            }
+        }
+
+        const lowStockAlert = document.getElementById("lowStockAlert");
+        if (lowStockMaterials.length > 0 && (currentUserPermissao === "admin" || currentUserPermissao === "mista")) {
+            lowStockAlert.classList.remove("hidden");
+        } else {
+            lowStockAlert.classList.add("hidden");
+        }
+    }
+
+    function openLowStockModal() {
+        const lowStockMaterials = [];
+        for (const code in materiais) {
+            if (materiais[code].quantidade <= LOW_STOCK_THRESHOLD) {
+                lowStockMaterials.push({
+                    code: code,
+                    descricao: materiais[code].descricao,
+                    quantidade: materiais[code].quantidade,
+                    unit: materiais[code].unit
+                });
+            }
+        }
+
+        const lowStockListDiv = document.getElementById("lowStockList");
+        lowStockListDiv.innerHTML = "";
+
+        if (lowStockMaterials.length === 0) {
+            lowStockListDiv.innerHTML = "<p>Nenhum material com estoque baixo no momento.</p>";
+        } else {
+            lowStockMaterials.forEach(material => {
+                const p = document.createElement("p");
+                p.className = "p-2 border border-gray-200 rounded bg-red-50 text-red-800 flex justify-between items-center list-group-item";
+                p.innerHTML = `
+                    <span>${material.code} - ${material.descricao}: ${material.quantidade} ${material.unit}</span>
+                    <button class="btn btn-primary btn-editar-qtd bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs" data-material-code="${material.code}">
+                        Editar Qtd
+                    </button>
+                `;
+                lowStockListDiv.appendChild(p);
+            });
+
+            document.querySelectorAll('.btn-editar-qtd').forEach(button => {
+                button.addEventListener('click', function() {
+                    const materialCode = this.dataset.materialCode;
+                    const quantityToPurchase = prompt("Quantas unidades deseja solicitar para compra?");
+                    const parsedQuantidade = parseInt(quantityToPurchase);
+
+                    if (parsedQuantidade > 0) {
+                        adicionarNaTabelaCompras(materialCode, parsedQuantidade, "Alta", document.getElementById("solicitante").value);
+                        alert("Solicitação de compra enviada com sucesso!");
+                    } else if (quantityToPurchase !== null) {
+                        alert("Invalid quantity. Please enter a number greater than 0.");
+                    }
+                });
+            });
+        }
+        document.getElementById("lowStockModal").classList.remove("hidden");
+    }
+
+    function closeLowStockModal() {
+        document.getElementById("lowStockModal").classList.add("hidden");
+    }
+
+    function abrirAdicionarEstoque() {
+        if (currentUserPermissao === "admin" || currentUserPermissao === "mista") {
+            document.getElementById("estoqueScreen").classList.remove("hidden");
+            document.getElementById("exportStockBtn").classList.remove("hidden");
+            listExistingMaterials();
+        } else {
+            alert("Você não tem permissão para adicionar estoque.");
+        }
+    }
+    function fecharAdicionarEstoque() {
+        document.getElementById("estoqueScreen").classList.add("hidden");
+    }
+    function salvarNovoEstoque() {
+        const codigo = document.getElementById("novoCodigo").value.trim();
+        const descricao = document.getElementById("novaDescricao").value.trim();
+        const quantidade = parseInt(document.getElementById("novaQuantidade").value.trim());
+        const unidade = document.getElementById("novaUnidade").value.trim();
+        const localizacao = document.getElementById("novaLocalizacao").value.trim();
+        const peso = document.getElementById("novoPeso").value.trim();
+
+        if (!codigo || !descricao || isNaN(quantidade) || !unidade || !localizacao || !peso) {
+            alert("Preencha todos os campos.");
+            return;
+        }
+        if (materiais[codigo]) {
+            alert("Já existe um material com esse código.");
+            return;
+        }
+
+        materiais[codigo] = {
+            quantidade: quantidade,
+            descricao: descricao,
+            unit: unidade,
+            location: localizacao,
+            weight: peso
+        };
+
+        localStorage.setItem("materiais", JSON.stringify(materiais));
+        populateMaterialDropdown();
+        listExistingMaterials();
+        showFeedback("Material adicionado com sucesso!", "bg-green-100", "text-green-700");
+        checkLowStock();
+
+        document.getElementById("novoCodigo").value = "";
+        document.getElementById("novaDescricao").value = "";
+        document.getElementById("novaQuantidade").value = "";
+        document.getElementById("novaUnidade").value = "";
+        document.getElementById("novaLocalizacao").value = "";
+        document.getElementById("novoPeso").value = "";
+    }
+
+    function listExistingMaterials() {
+        const listDiv = document.getElementById("existingMaterialsList");
+        listDiv.innerHTML = "";
+
+        if (Object.keys(materiais).length === 0) {
+            listDiv.innerHTML = "<p class='text-gray-600'>Nenhum material cadastrado.</p>";
+            return;
+        }
+
+        for (const code in materiais) {
+            const m = materiais[code];
+            const itemDiv = document.createElement("div");
+            itemDiv.className = "flex items-center justify-between p-2 border border-gray-200 rounded";
+            itemDiv.innerHTML = `
+                <span class="text-sm font-medium">${code} - ${m.descricao}</span>
+                <span class="text-sm text-gray-700">Qtd: ${m.quantidade} ${m.unit}</span>
+                <button onclick="editarMaterialEstoque('${code}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs">
+                    Editar Qtd
+                </button>
+            `;
+            listDiv.appendChild(itemDiv);
+        }
+    }
+
+    function editarMaterialEstoque(materialCode) {
+        if (!(currentUserPermissao === "admin" || currentUserPermissao === "mista" || currentUserPermissao === "master")) {
+            alert("Você não tem permissão para editar o estoque.");
+            return;
+        }
+
+        const currentQuantidade = materiais[materialCode].quantidade;
+        let newQuantidade = prompt(`Digite a nova quantidade para "${materialCode} - ${materiais[materialCode].descricao}" (atual: ${currentQuantidade}):`);
+
+        if (newQuantidade === null) {
+            return;
+        }
+
+        newQuantidade = parseInt(newQuantidade.trim());
+
+        if (isNaN(newQuantidade) || newQuantidade < 0) {
+            alert("Quantidade inválida. Por favor, digite um número positivo.");
+            return;
+        }
+
+        materiais[materialCode].quantidade = newQuantidade;
+        localStorage.setItem("materiais", JSON.stringify(materiais));
+        populateMaterialDropdown();
+        listExistingMaterials();
+        checkLowStock();
+        showFeedback(`Quantidade de "${materialCode}" atualizada para ${newQuantidade}.`, "bg-green-100", "text-green-700");
+    }
+
+    function abrirConfiguracoes() {
+        if (currentUserPermissao !== "admin") {
+            alert("Apenas o usuário admin pode editar as configurações.");
+            return;
+        }
+        document.getElementById("configScreen").classList.remove("hidden");
+        document.getElementById("tempoAlta").value = localStorage.getItem("tempoAlta") || "Entrega imediata";
+        document.getElementById("tempoMedia").value = localStorage.getItem("tempoMedia") || "Entrega em 2 horas";
+        document.getElementById("tempoBaixa").value = localStorage.getItem("tempoBaixa") || "Entrega em 4 horas";
+        listarUsuarios();
+    }
+    function fecharConfig() {
+        document.getElementById("configScreen").classList.add("hidden");
+    }
+    function salvarConfiguracoes() {
+        localStorage.setItem("tempoAlta", document.getElementById("tempoAlta").value);
+        localStorage.setItem("tempoMedia", document.getElementById("tempoMedia").value);
+        localStorage.setItem("tempoBaixa", document.getElementById("tempoBaixa").value);
+        aplicarTempos();
+        fecharConfig();
+        showFeedback("Configurações salvas com sucesso!", "bg-green-100", "text-green-700");
+    }
+
+    function aplicarTempos() {
+        const tempoAlta = localStorage.getItem("tempoAlta") || "Entrega imediata";
+        const tempoMedia = localStorage.getItem("tempoMedia") || "Entrega em 2 horas";
+        const tempoBaixa = localStorage.getItem("tempoBaixa") || "Entrega em 4 horas";
+
+        const prioridade = document.getElementById("prioridade");
+        if (prioridade && prioridade.options.length >= 3) {
+            prioridade.options[0].text = `Baixa (${tempoBaixa})`;
+            prioridade.options[1].text = `Média (${tempoMedia})`;
+            prioridade.options[2].text = `Alta (${tempoAlta})`;
+        }
+    }
+
+    function salvarUsuarios() {
+        localStorage.setItem(usuariosKey, JSON.stringify(usuarios));
+        listarUsuarios();
+    }
+
+    function listarUsuarios() {
+        const tbody = document.getElementById("tabelaUsuarios");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+        usuarios = JSON.parse(localStorage.getItem(usuariosKey));
+        Object.entries(usuarios).forEach(([user, info]) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td class="p-2">${user}</td>
+                <td class="p-2">
+                    ${info.permissao === "admin"
+                        ? '<span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs"><i class="fa-solid fa-crown"></i> Admin</span>'
+                        : info.permissao === "mista"
+                        ? '<span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs"><i class="fa-solid fa-gear"></i> Mista</span>'
+                        : info.permissao === "master"
+                        ? '<span class="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs"><i class="fa-solid fa-star"></i> Master</span>'
+                        : '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs"><i class="fa-solid fa-box"></i> Solicitante</span>'}
+                </td>
+                <td class="p-2">
+                    ${info.aprovador === "ap1"
+                        ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Aprovador 1</span>'
+                        : info.aprovador === "ap2"
+                        ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Aprovador 2</span>'
+                        : info.aprovador === "ap3"
+                        ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Aprovador 3</span>'
+                        : '<span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">Nenhum</span>'}
+                </td>
+                <td class="p-2 space-x-2">
+                    <button onclick="editarUsuario('${user}')" class="text-blue-600 hover:underline">Editar</button>
+                    <button onclick="excluirUsuario('${user}')" class="text-red-600 hover:underline">Excluir</button>
+                </td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function cadastrarUsuario() {
+        const user = document.getElementById("novoUsuario").value.trim();
+        const senha = document.getElementById("senhaUsuario").value.trim();
+        const permissao = document.getElementById("permissaoUsuario").value;
+        const aprovador = document.getElementById("aprovadorUsuario").value;
+        const nomeCompleto = user; // For simplicity, use username as full name for new users
+
+        if (!user || !senha) {
+            alert("Preencha todos os campos para cadastrar o usuário.");
+            return;
+        }
+        if (usuarios[user]) {
+            alert("Já existe um usuário com esse nome.");
+            return;
+        }
+        usuarios[user] = { senha, permissao, nomeCompleto, aprovador };
+        salvarUsuarios();
+        document.getElementById("novoUsuario").value = "";
+        document.getElementById("senhaUsuario").value = "";
+        document.getElementById("permissaoUsuario").value = "solicitante";
+        document.getElementById("aprovadorUsuario").value = "";
+        showFeedback("Usuário cadastrado com sucesso!", "bg-green-100", "text-green-700");
+    }
+
+    function editarUsuario(user) {
+        const currentInfo = usuarios[user];
+        let novaSenha = prompt("Nova senha para " + user + " (deixe em branco para manter a atual):", "");
+        if (novaSenha === null) return;
+        if (novaSenha === "") novaSenha = currentInfo.senha;
+
+        let novaPerm = prompt("Nova permissão para " + user + " (admin, mista, master ou solicitante):", currentInfo.permissao);
+        if (novaPerm === null) return;
+
+        novaPerm = novaPerm.toLowerCase();
+        if (!["admin", "mista", "master", "solicitante"].includes(novaPerm)) {
+            alert("Permissão inválida. Use 'admin', 'mista', 'master' ou 'solicitante'.");
+            return;
+        }
+
+        let novoAprovador = prompt("Nova designação de aprovador para " + user + " (ap1, ap2, ap3 ou vazio para nenhum):", currentInfo.aprovador);
+        if (novoAprovador === null) return;
+        novoAprovador = novoAprovador.toLowerCase();
+        if (!["ap1", "ap2", "ap3", ""].includes(novoAprovador)) {
+            alert("Designação de aprovador inválida. Use 'ap1', 'ap2', 'ap3' ou deixe em branco.");
+            return;
+        }
+
+        usuarios[user].senha = novaSenha;
+        usuarios[user].permissao = novaPerm;
+        usuarios[user].aprovador = novoAprovador;
+        // Update nomeCompleto if it's a specific master user
+        if (user === "Ricardo") usuarios[user].nomeCompleto = "Ricardo (SUP)";
+        else if (user === "Sabino") usuarios[user].nomeCompleto = "Sabino (GP)";
+        else if (user === "Pablo") usuarios[user].nomeCompleto = "Pablo (CO)";
+        else if (user === "admin") usuarios[user].nomeCompleto = "Admin (ADM)";
+        else if (user === "Simone") usuarios[user].nomeCompleto = "Simone (ENC)";
+        else if (user === "Vinicius") usuarios[user].nomeCompleto = "Vinicius (SOL)";
+        else if (user === "Teste") usuarios[user].nomeCompleto = "Teste (Mista)";
+        else usuarios[user].nomeCompleto = user; // Default for others
+
+        salvarUsuarios();
+        showFeedback("Usuário editado com sucesso!", "bg-green-100", "text-green-700");
+    }
+
+    function excluirUsuario(user) {
+        if (user === "admin" || user === "Ricardo" || user === "Sabino" || user === "Pablo" || user === "Simone" || user === "Vinicius" || user === "Teste") {
+            alert("Este usuário padrão não pode ser excluído.");
+            return;
+        }
+        if (confirm("Deseja realmente excluir o usuário " + user + "?")) {
+            delete usuarios[user];
+            salvarUsuarios();
+            showFeedback("Usuário excluído com sucesso!", "bg-green-100", "text-green-700");
+        }
+    }
+
+    function escapeCsv(value) {
+        if (value === null || value === undefined) {
+            return '';
+        }
+        value = String(value);
+        if (value.includes(',') || value.includes('"') || value.includes('\n') || value.includes('\r')) {
+            return '"' + value.replace(/"/g, '""') + '"';
+        }
+        return value;
+    }
+
+    // Removed exportRequestsToCsv() as it will be replaced by exportToExcel()
+
+    function exportStockToCsv() {
+        let csv = [];
+        csv.push(escapeCsv("Código") + "," + escapeCsv("Descrição") + "," + escapeCsv("Quantidade") + "," + escapeCsv("Unidade") + "," + escapeCsv("Localização") + "," + escapeCsv("Peso"));
+
+        for (const code in materiais) {
+            const m = materiais[code];
+            csv.push(`${escapeCsv(code)},${escapeCsv(m.descricao)},${escapeCsv(m.quantidade)},${escapeCsv(m.unit)},${escapeCsv(m.location)},${escapeCsv(m.weight)}`);
+        }
+
+        downloadCsv(csv.join('\n'), 'estoque.csv');
+        showFeedback("Estoque exportado para CSV!", "bg-blue-100", "text-blue-700");
+    }
+
+    function downloadCsv(csvContent, fileName) {
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    }
+
+    function downloadStockTemplate() {
+        const headers = ["Código", "Descrição", "Quantidade", "Unidade", "Localização", "Peso"];
+        const ws = XLSX.utils.aoa_to_sheet([headers]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Template Estoque");
+        XLSX.writeFile(wb, "template_estoque.xlsx");
+        showFeedback("Template Excel baixado!", "bg-blue-100", "text-blue-700");
+    }
+
+    function abrirDashboard() {
+  try { window.ensureLegacyCards && window.ensureLegacyCards(); } catch(e){}
+  try { requestAnimationFrame(()=>requestAnimationFrame(()=>{ window.renderSolicitacoesChart && window.renderSolicitacoesChart(); window.renderEstoqueChart && window.renderEstoqueChart(); })); } catch(e){}
+  try { window.ensureLegacyCards && window.ensureLegacyCards(); } catch(e) { console.error(e); }
+  try { _moveLegacyToDashboard(); } catch(e) { console.error(e); }
+  try { renderAllNewCharts(); } catch(e) { console.error(e); }
+    try { window.renderSolicitacoesChart && window.renderSolicitacoesChart(); } catch(e) { console.error(e); }
+    try { window.renderEstoqueChart && window.renderEstoqueChart(); } catch(e) { console.error(e); }
+    try { window.renderSolicitacoesChart && window.renderSolicitacoesChart(); } catch(e) { console.error(e); }
+    try { window.renderEstoqueChart && window.renderEstoqueChart(); } catch(e) { console.error(e); }
+    try { _updateKpisResumo(); } catch(e) { console.error(e); }
+    try { _renderResumoEstoqueChart(); } catch(e) { console.error(e); }
+    try { _dedupeResumoEstoqueCard(); } catch(e) { console.error(e); }
+  try { _dedupeResumoEstoqueCard(); } catch(e) { console.error(e); }
+  try { _renderResumoEstoqueChart(); } catch(e) { console.error(e); }
+  try { _dedupeResumoEstoqueCard(); } catch(e) { console.error(e); }
+  try { _ensureLegacyRendered(); } catch(e) { console.error(e); }
+  try { window.renderSolicitacoesChart && window.renderSolicitacoesChart(); } catch(e) { console.error(e); }
+  try { window.renderEstoqueChart && window.renderEstoqueChart(); } catch(e) { console.error(e); }
+  try { _updateKpisResumo(); } catch(e) { console.error(e); }
+  try { _renderResumoEstoqueChart(); } catch(e) { console.error(e); }
+  try { _dedupeResumoEstoqueCard(); } catch(e) { console.error(e); }
+  try { _renderResumoEstoqueChart(); } catch(e) { console.error(e); }
+  try { _dedupeResumoEstoqueCard(); } catch(e) { console.error(e); }
+        atualizarResumoEstoque();
+        if (!(currentUserPermissao === "admin" || currentUserPermissao === "mista" || currentUserPermissao === "master")) {
+            alert("Você não tem permissão para visualizar o Dashboard.");
+            return;
+        }
+
+        const rows = document.querySelectorAll("#requestsTableBody tr");
+
+        let total = 0, entregues = 0, canceladas = 0, pendentes = 0;
+        rows.forEach(row => {
+            const status = row.getAttribute("data-status");
+            total++;
+            if (status === "Entregue") entregues++;
+            else if (status === "Cancelado") canceladas++;
+            else pendentes++;
+        });
+
+        document.getElementById("totalSolicitacoes").textContent = total;
+        document.getElementById("entreguesSolicitacoes").textContent = entregues;
+        document.getElementById("canceladasSolicitacoes").textContent = canceladas;
+        document.getElementById("pendentesSolicitacoes").textContent = pendentes;
+
+        let totalItens = 0;
+        let baixos = 0;
+        for (const code in materiais) {
+            totalItens++;
+            if (materiais[code].quantidade <= LOW_STOCK_THRESHOLD) baixos++;
+        }
+
+        document.getElementById("totalItensEstoque").textContent = totalItens;
+
+        let entreguesEstoque = 0;
+        for (const row of document.querySelectorAll("#requestsTableBody tr")) {
+            const status = row.getAttribute("data-status");
+            if (status === "Entregue") {
+                entreguesEstoque += parseInt(row.cells[2].textContent.trim());
+            }
+        }
+        document.getElementById("totalItensEntregues").textContent = entreguesEstoque;
+
+        const ctxPizza = document.getElementById('solicitacoesChart').getContext('2d');
+
+        if (window.solicitacoesPieChart) {
+            window.solicitacoesPieChart.destroy();
+        }
+
+        window.solicitacoesPieChart = new Chart(ctxPizza, {
+            type: 'pie',
+            data: {
+                labels: ['Pendentes', 'Entregues', 'Canceladas'],
+                datasets: [{
+                    data: [pendentes, entregues, canceladas],
+                    backgroundColor: [
+                        'rgba(255, 193, 7, 0.8)',
+                        'rgba(56, 142, 60, 0.8)',
+                        'rgba(211, 47, 47, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 193, 7, 1)',
+                        'rgba(56, 142, 60, 1)',
+                        'rgba(211, 47, 47, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Distribuição de Solicitações por Status'
+                    }
+                }
+            }
+        });
+
+        const ctxEstoque = document.getElementById('estoqueChart').getContext('2d');
+
+        if (window.estoqueBarChart) {
+            window.estoqueBarChart.destroy();
+        }
+
+        window.estoqueBarChart = new Chart(ctxEstoque, {
+            type: 'bar',
+            data: {
+                labels: ['Total de Itens', 'Itens com Estoque Baixo', 'Itens Entregues'],
+                datasets: [{
+                    label: 'Quantidade',
+                    data: [totalItens, baixos, entreguesEstoque],
+                    backgroundColor: [
+                        'rgba(0, 114, 184, 0.8)',
+                        'rgba(211, 47, 47, 0.8)',
+                        'rgba(56, 142, 60, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(0, 114, 184, 1)',
+                        'rgba(211, 47, 47, 1)',
+                        'rgba(56, 142, 60, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Resumo do Estoque'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Contagem'
+                        }
+                    },
+                    x: {}
+                }
+            }
+        });
+
+        document.getElementById("dashboardScreen").classList.remove("hidden");
+    }
+
+    function fecharDashboard() {
+  try { _returnLegacyFromDashboard(); } catch(e) { console.error(e); }
+        document.getElementById("dashboardScreen").classList.add("hidden");
+    }
+
+    // Modified importStockFromCsv to handle both CSV and Excel
+    function handleImportStockFile() {
+        const fileInput = document.getElementById('importStockFile');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            alert('Por favor, selecione um arquivo para importar.');
+            return;
+        }
+
+        const fileName = file.name;
+        const fileExtension = fileName.split('.').pop().toLowerCase();
+
+        if (fileExtension === 'csv') {
+            importStockFromCsv(file);
+        } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+            importStockFromExcel(file);
+        } else {
+            showFeedback("Formato de arquivo não suportado. Por favor, selecione um arquivo CSV ou Excel (.xlsx, .xls).", "bg-red-100", "text-red-700");
+        }
+    }
+
+    function importStockFromCsv(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const text = e.target.result;
+            const lines = text.split('\n').filter(line => line.trim() !== '');
+
+            if (lines.length === 0) {
+                showFeedback("O arquivo CSV está vazio.", "bg-red-100", "text-red-700");
+                return;
+            }
+
+            materiais = {}; // Clear existing materials before import
+
+            let importedCount = 0;
+            let updatedCount = 0;
+            let errorCount = 0;
+            let errorMessages = [];
+
+            const csvRegex = /(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|([^",]*))(?:,|$)/g;
+
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i];
+                const values = [];
+                let match;
+                let lastIndex = 0;
+
+                while ((match = csvRegex.exec(line)) !== null) {
+                    let value = match[1] !== undefined ? match[1] : match[2];
+                    if (value === undefined) value = '';
+                    values.push(value.replace(/""/g, '"').trim());
+                    lastIndex = csvRegex.lastIndex;
+                }
+                if (lastIndex < line.length && line.charAt(lastIndex - 1) === ',') {
+                    values.push('');
+                }
+
+                if (values.length < 6) {
+                    errorMessages.push(`Linha ${i + 1} ignorada: Formato inválido. Esperado 6 colunas, encontrado ${values.length}. Linha: "${line}"`);
+                    errorCount++;
+                    continue;
+                }
+
+                const codigo = values[0];
+                const descricao = values[1];
+                const quantidade = parseInt(values[2].replace(',', '.'));
+                const unidade = values[3];
+                const localizacao = values[4];
+                const peso = values[5].replace(',', '.');
+
+                const finalPeso = peso || "N/A";
+
+                if (!codigo || !descricao || isNaN(quantidade) || !unidade || !localizacao) {
+                    errorMessages.push(`Linha ${i + 1} ignorada: Dados incompletos ou inválidos (Código: "${codigo}", Qtd: "${values[2]}"). Linha: "${line}"`);
+                    errorCount++;
+                    continue;
+                }
+
+                if (materiais[codigo]) {
+                    materiais[codigo].descricao = descricao;
+                    materiais[codigo].quantidade = quantidade;
+                    materiais[codigo].unit = unidade;
+                    materiais[codigo].location = localizacao;
+                    materiais[codigo].weight = finalPeso;
+                    updatedCount++;
+                } else {
+                    materiais[codigo] = {
+                        quantidade: quantidade,
+                        descricao: descricao,
+                        unit: unidade,
+                        location: localizacao,
+                        weight: finalPeso
+                    };
+                    importedCount++;
+                }
+            }
+
+            localStorage.setItem("materiais", JSON.stringify(materiais));
+            populateMaterialDropdown();
+            listExistingMaterials();
+            checkLowStock();
+            fecharAdicionarEstoque();
+
+            let feedbackMsg = `Importação CSV concluída: ${importedCount} novos materiais, ${updatedCount} materiais atualizados.`;
+            if (errorCount > 0) {
+                feedbackMsg += ` ${errorCount} linhas com erro.`;
+                showFeedback(feedbackMsg, "bg-yellow-100", "text-yellow-700");
+                alert("Algumas linhas foram ignoradas devido a erros de formato ou dados incompletos. Verifique o console do navegador para mais detalhes.\n\n" + errorMessages.slice(0, 5).join('\n') + (errorMessages.length > 5 ? '\n...' : ''));
+                console.error("Erros de importação CSV:", errorMessages);
+            } else {
+                showFeedback(feedbackMsg, "bg-green-100", "text-green-700");
+            }
+            fileInput.value = '';
+        };
+
+        reader.onerror = function() {
+            showFeedback("Erro ao ler o arquivo CSV.", "bg-red-100", "text-red-700");
+        };
+
+        reader.readAsText(file, 'UTF-8');
+    }
+
+    function importStockFromExcel(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Get data as array of arrays
+
+                if (json.length === 0) {
+                    showFeedback("O arquivo Excel está vazio.", "bg-red-100", "text-red-700");
+                    return;
+                }
+
+                const headerRow = json[0];
+                const dataRows = json.slice(1);
+
+                // Map column headers to expected keys (case-insensitive and flexible)
+                const headerMap = {};
+                headerRow.forEach((header, index) => {
+                    const normalizedHeader = header.toUpperCase().replace(/[^A-Z0-9]/g, ''); // Remove non-alphanumeric
+                    if (normalizedHeader.includes('CODIGO')) headerMap.codigo = index;
+                    else if (normalizedHeader.includes('DESCRICAO')) headerMap.descricao = index;
+                    else if (normalizedHeader.includes('QUANTIDADE')) headerMap.quantidade = index;
+                    else if (normalizedHeader.includes('UNIDADE')) headerMap.unidade = index;
+                    else if (normalizedHeader.includes('LOCALIZACAO')) headerMap.localizacao = index;
+                    else if (normalizedHeader.includes('PESO')) headerMap.peso = index;
+                    else if (normalizedHeader.includes('ITEM')) headerMap.item = index; // For potential 'ITEM' column as code
+                });
+
+                // Validate required columns
+                const requiredHeaders = ['codigo', 'descricao', 'quantidade', 'unidade', 'localizacao'];
+                const missingHeaders = requiredHeaders.filter(h => headerMap[h] === undefined && !(h === 'codigo' && headerMap.item !== undefined));
+
+                if (missingHeaders.length > 0) {
+                    showFeedback(`Cabeçalhos obrigatórios ausentes no arquivo Excel: ${missingHeaders.join(', ')}.`, "bg-red-100", "text-red-700");
+                    return;
+                }
+
+                materiais = {}; // Clear existing materials before import
+
+                let importedCount = 0;
+                let updatedCount = 0;
+                let errorCount = 0;
+                let errorMessages = [];
+
+                dataRows.forEach((row, rowIndex) => {
+                    const codigo = (row[headerMap.codigo] || row[headerMap.item])?.toString().trim();
+                    const descricao = row[headerMap.descricao]?.toString().trim();
+                    const quantidade = parseInt(row[headerMap.quantidade]);
+                    const unidade = row[headerMap.unidade]?.toString().trim();
+                    const localizacao = row[headerMap.localizacao]?.toString().trim();
+                    const peso = row[headerMap.peso]?.toString().trim() || "N/A";
+
+                    if (!codigo || !descricao || isNaN(quantidade) || !unidade || !localizacao) {
+                        errorMessages.push(`Linha ${rowIndex + 2} ignorada: Dados incompletos ou inválidos (Código: "${codigo}", Qtd: "${row[headerMap.quantidade]}").`);
+                        errorCount++;
+                        return;
+                    }
+
+                    if (materiais[codigo]) {
+                        materiais[codigo].descricao = descricao;
+                        materiais[codigo].quantidade = quantidade;
+                        materiais[codigo].unit = unidade;
+                        materiais[codigo].location = localizacao;
+                        materiais[codigo].weight = peso;
+                        updatedCount++;
+                    } else {
+                        materiais[codigo] = {
+                            quantidade: quantidade,
+                            descricao: descricao,
+                            unit: unidade,
+                            location: localizacao,
+                            weight: peso
+                        };
+                        importedCount++;
+                    }
+                });
+
+                localStorage.setItem("materiais", JSON.stringify(materiais));
+                populateMaterialDropdown();
+                listExistingMaterials();
+                checkLowStock();
+                fecharAdicionarEstoque();
+
+                let feedbackMsg = `Importação Excel concluída: ${importedCount} novos materiais, ${updatedCount} materiais atualizados.`;
+                if (errorCount > 0) {
+                    feedbackMsg += ` ${errorCount} linhas com erro.`;
+                    showFeedback(feedbackMsg, "bg-yellow-100", "text-yellow-700");
+                    alert("Algumas linhas foram ignoradas devido a erros de formato ou dados incompletos. Verifique o console do navegador para mais detalhes.\n\n" + errorMessages.slice(0, 5).join('\n') + (errorMessages.length > 5 ? '\n...' : ''));
+                    console.error("Erros de importação Excel:", errorMessages);
+                } else {
+                    showFeedback(feedbackMsg, "bg-green-100", "text-green-700");
+                }
+                fileInput.value = '';
+
+            } catch (error) {
+                showFeedback("Erro ao processar o arquivo Excel. Verifique se o arquivo está no formato correto e não está corrompido.", "bg-red-100", "text-red-700");
+                console.error("Erro na importação de Excel:", error);
+            }
+        };
+
+        reader.onerror = function() {
+            showFeedback("Erro ao ler o arquivo Excel.", "bg-red-100", "text-red-700");
+        };
+
+        reader.readAsArrayBuffer(file);
+    }
+
+    function limparEstoque() {
+        if (confirm("Tem certeza que deseja apagar TODO o estoque? Esta ação não pode ser desfeita.")) {
+            materiais = {};
+            localStorage.setItem("materiais", JSON.stringify(materiais));
+            populateMaterialDropdown();
+            listExistingMaterials();
+            checkLowStock();
+            showFeedback("Estoque limpo com sucesso!", "bg-green-100", "text-green-700");
+            fecharAdicionarEstoque();
+        }
+    }
+
+    function limparHistoricoSolicitacoes() {
+        if (currentUserPermissao !== "admin") {
+            alert("Apenas o usuário admin pode limpar o histórico de solicitações.");
+            return;
+        }
+        if (confirm("Tem certeza que deseja apagar TODO o histórico de solicitações? Esta ação não pode ser desfeita.")) {
+            localStorage.removeItem("solicitacoes");
+            document.getElementById("requestsTableBody").innerHTML = "";
+            showFeedback("Histórico de solicitações limpo com sucesso!", "bg-green-100", "text-green-700");
+            fecharConfig();
+        }
+    }
+
+    // New function to clear purchase history
+    function limparHistoricoCompras() {
+        if (currentUserPermissao !== "admin") {
+            alert("Apenas o usuário admin pode apagar o histórico de compras.");
+            return;
+        }
+        if (confirm("Tem certeza que deseja apagar TODO o histórico de compras? Esta ação não pode ser desfeita.")) {
+            localStorage.removeItem("compras");
+            document.getElementById("comprasTableBody").innerHTML = "";
+            showFeedback("Histórico de compras apagado com sucesso!", "bg-green-100", "text-green-700");
+            fecharConfig();
+        }
+    }
+
+    document.getElementById("btnLogin").addEventListener("click", login);
+
+    window.onload = function() {
+        inicializarUsuarios();
+        document.body.classList.add("body-login");
+        populateMaterialDropdown();
+        loadRequestsTable();
+        loadComprasTable(); // Load purchase requests on page load
+        aplicarTempos();
+    };
+
+    function atualizarResumoEstoque() {
+        let total = 0;
+        let baixos = 0;
+        let entregues = 0;
+
+        for (const code in materiais) {
+            const qtd = materiais[code].quantidade;
+            total++;
+            if (qtd <= LOW_STOCK_THRESHOLD) baixos++;
+        }
+
+        for (const row of document.querySelectorAll("#requestsTableBody tr")) {
+            const status = row.getAttribute("data-status");
+            if (status === "Entregue") {
+                entregues += parseInt(row.cells[2].textContent.trim());
+            }
+        }
+
+        document.getElementById("estoqueTotal").textContent = `📦 Itens totais: ${total}`;
+        document.getElementById("estoqueBaixo").textContent = `⚠️ Estoque baixo (≤ 5): ${baixos}`;
+        document.getElementById("estoqueEntregues").textContent = `✅ Itens entregues: ${entregues}`;
+    }
+
+    // Purchase Request Table Logic
+    function adicionarNaTabelaCompras(materialCode, qtd, prioridade, solicitante) {
+        const id = Math.floor(Math.random() * 100000);
+        const tbody = document.getElementById('comprasTableBody');
+        const tr = document.createElement('tr');
+        tr.dataset.id = id;
+        tr.innerHTML = `
+            <td>${id}</td>
+            <td>${materialCode}</td>
+            <td>${qtd}</td>
+            <td>${prioridade}</td>
+            <td class="status status-text aguardando-text">Aguardando aprovação</td>
+            <td>${solicitante}<br><small>${new Date().toLocaleString()}</small></td>
+            <td class="ap" data-ap="1"></td>
+            <td class="ap" data-ap="2"></td>
+            <td class="ap" data-ap="3"></td>
+            <td>
+                <span class="icon-btn aprove" onclick="aprovarEtapa(this)">✔</span>
+                <span class="icon-btn reprove" onclick="reprove(this)">✖</span>
+            </td>
+        `;
+        tbody.appendChild(tr);
+        saveComprasTable();
+        updateApprovalButtonsVisibility(); // Update visibility for new row
+    }
+
+    function saveComprasTable() {
+        localStorage.setItem("compras", document.getElementById("comprasTableBody").innerHTML);
+    }
+
+    function loadComprasTable() {
+        const saved = localStorage.getItem("compras");
+        if (saved) {
+            document.getElementById("comprasTableBody").innerHTML = saved;
+            // Re-attach event listeners for approval/rejection buttons
+            document.querySelectorAll('#comprasTableBody .icon-btn.aprove').forEach(button => {
+                button.onclick = function() { aprovarEtapa(this); };
+            });
+            document.querySelectorAll('#comprasTableBody .icon-btn.reprove').forEach(button => {
+                button.onclick = function() { reprove(this); };
+            });
+        }
+        updateApprovalButtonsVisibility(); // Ensure correct button states after loading
+    }
+
+    function aprovarEtapa(button) {
+        const tr = button.closest('tr');
+        const statusCell = tr.querySelector('.status');
+        const currentStatusText = statusCell.textContent;
+        const approverName = usuarios[currentUser].nomeCompleto;
+
+        if (currentStatusText.includes('Reprovado')) {
+            alert("A solicitação já foi reprovada. Não é possível aprovar.");
+            return;
+        }
+        if (currentStatusText.includes("RM ")) {
+            alert("A RM já foi gerada. Não é possível aprovar novamente.");
+            return;
+        }
+
+        if (currentUserPermissao === "solicitante") {
+            alert("Você não tem permissão para aprovar solicitações de compra.");
+            return;
+        }
+
+        const apCells = tr.querySelectorAll('.ap');
+        let approved = false;
+        let currentApStage = -1; // 0 for AP1, 1 for AP2, 2 for AP3
+
+        // Determine the next pending approval stage
+        for (let i = 0; i < apCells.length; i++) {
+            if (!apCells[i].textContent.trim()) {
+                currentApStage = i;
+                break;
+            }
+        }
+
+        if (currentApStage === -1) {
+            alert("Todas as aprovações já foram concluídas.");
+            return;
+        }
+
+        // Authorization logic based on approver role
+        if (currentUserPermissao === "admin") {
+            apCells[currentApStage].innerHTML = `${approverName}<br><small>${new Date().toLocaleString()}</small>`;
+            approved = true;
+        } else if (currentUserPermissao === "master" || currentUserPermissao === "mista") {
+            // MODIFIED LOGIC: Allow master users to approve AP2 and AP3
+            if ((currentUserApprover === "ap1" && currentApStage === 0) ||
+                ((currentUserApprover === "ap2" || currentUserPermissao === "master") && currentApStage === 1) ||
+                ((currentUserApprover === "ap3" || currentUserPermissao === "master") && currentApStage === 2)) {
+                apCells[currentApStage].innerHTML = `${approverName}<br><small>${new Date().toLocaleString()}</small>`;
+                approved = true;
+            } else {
+                alert(`Você (${approverName}) não está autorizado a aprovar esta etapa (AP${currentApStage + 1}).`);
+                return;
+            }
+        } else {
+            alert("Você não tem permissão para aprovar solicitações de compra.");
+            return;
+        }
+
+        if (approved) {
+            updateStatus(tr);
+            saveComprasTable();
+            updateApprovalButtonsVisibility(); // Re-evaluate button states after approval
+        }
+    }
+
+    function reprove(el) {
+        const tr = el.closest('tr');
+        const statusCell = tr.querySelector('.status');
+        const currentStatusText = statusCell.textContent;
+        const approverName = usuarios[currentUser].nomeCompleto;
+
+
+        if (currentUserPermissao === "solicitante") {
+            alert("Você não tem permissão para reprovar solicitações de compra.");
+            return;
+        }
+
+        if (currentStatusText.includes('Reprovado')) {
+            alert("A solicitação já foi reprovada. Não é possível reprovar novamente.");
+            return;
+        }
+        if (currentStatusText.includes("RM ")) {
+            alert("A RM já foi gerada. Não é possível reprovar.");
+            return;
+        }
+
+        const motivo = prompt("Informe o motivo da reprovação:");
+        if (!motivo) return;
+
+        const apCells = tr.querySelectorAll('.ap');
+        let reproved = false;
+        let currentApStage = -1;
+
+        // Determine the next pending approval stage
+        for (let i = 0; i < apCells.length; i++) {
+            if (!apCells[i].textContent.trim()) {
+                currentApStage = i;
+                break;
+            }
+        }
+
+        if (currentApStage === -1) {
+            alert("Todas as aprovações já foram concluídas ou a solicitação já foi reprovada.");
+            return;
+        }
+
+        // Authorization logic based on approver role
+        if (currentUserPermissao === "admin") {
+            apCells[currentApStage].innerHTML = `
+                Reprovado por ${approverName}
+                <span class='reprovado-icon' onclick="alert('${motivo.replace(/'/g, "\\'")}')">⚠️</span><br>
+                <small>${new Date().toLocaleString()}</small>
+            `;
+            reproved = true;
+        } else if (currentUserPermissao === "master" || currentUserPermissao === "mista") {
+            // MODIFIED LOGIC: Allow master users to reprove AP2 and AP3
+            if ((currentUserApprover === "ap1" && currentApStage === 0) ||
+                ((currentUserApprover === "ap2" || currentUserPermissao === "master") && currentApStage === 1) ||
+                ((currentUserApprover === "ap3" || currentUserPermissao === "master") && currentApStage === 2)) {
+                apCells[currentApStage].innerHTML = `
+                    Reprovado por ${approverName}
+                    <span class='reprovado-icon' onclick="alert('${motivo.replace(/'/g, "\\'")}')">⚠️</span><br>
+                    <small>${new Date().toLocaleString()}</small>
+                `;
+                reproved = true;
+            } else {
+                alert(`Você (${approverName}) não está autorizado a reprovar esta etapa (AP${currentApStage + 1}).`);
+                return;
+            }
+        } else {
+            alert("Você não tem permissão para reprovar solicitações de compra.");
+            return;
+        }
+
+        if (reproved) {
+            statusCell.innerHTML = "<span class='status-text reprovado-text'>Reprovado</span>";
+            saveComprasTable();
+            updateApprovalButtonsVisibility(); // Re-evaluate button states after rejection
+        }
+    }
+
+    function updateStatus(tr) {
+        const aprovacoes = tr.querySelectorAll('.ap');
+        const statusEl = tr.querySelector('.status');
+        let allApproved = true;
+        let anyReproved = false;
+
+        for (let ap of aprovacoes) {
+            if (ap.innerText.includes("Reprovado")) {
+                anyReproved = true;
+                break;
+            }
+            if (!ap.textContent.trim()) { // Check if the cell is empty
+                allApproved = false;
+            }
+        }
+
+        if (anyReproved) {
+            statusEl.innerHTML = "<span class='status-text reprovado-text'>Reprovado</span>";
+            // Disable all buttons if reproved
+            tr.querySelectorAll('.icon-btn').forEach(btn => btn.classList.add('disabled'));
+        } else if (allApproved) {
+            const rm = prompt("Todos aprovaram. Informe o número da RM gerada:");
+            if (rm) {
+                statusEl.innerHTML = "<span class='status-text aprovado-text'>RM " + rm + "</span><br><small>" + new Date().toLocaleString() + "</small>";
+                // Disable all buttons if RM is generated
+                tr.querySelectorAll('.icon-btn').forEach(btn => btn.classList.add('disabled'));
+            }
+        }
+    }
+
+    function updateApprovalButtonsVisibility() {
+        const rows = document.querySelectorAll('#comprasTableBody tr');
+        rows.forEach(tr => {
+            const apCells = tr.querySelectorAll('.ap');
+            const approveButton = tr.querySelector('.icon-btn.aprove');
+            const reproveButton = tr.querySelector('.icon-btn.reprove');
+            const statusText = tr.querySelector('.status').textContent;
+
+            // Disable all buttons if already reproved or RM generated
+            if (statusText.includes('Reprovado') || statusText.includes('RM ')) {
+                approveButton.classList.add('disabled');
+                reproveButton.classList.add('disabled');
+                return;
+            }
+
+            let nextApStage = -1; // 0 for AP1, 1 for AP2, 2 for AP3
+            for (let i = 0; i < apCells.length; i++) {
+                if (!apCells[i].textContent.trim()) {
+                    nextApStage = i;
+                    break;
+                }
+            }
+
+            // Approval button logic
+            if (nextApStage === -1) { // All stages approved
+                approveButton.classList.add('disabled');
+            } else if (currentUserPermissao === "admin") {
+                approveButton.classList.remove('disabled'); // Admin can approve any empty stage
+            } else if (currentUserPermissao === "master" || currentUserPermissao === "mista") {
+                // MODIFIED LOGIC: Allow master users to approve AP2 and AP3
+                if ((currentUserApprover === "ap1" && nextApStage === 0) ||
+                    ((currentUserApprover === "ap2" || currentUserPermissao === "master") && nextApStage === 1) ||
+                    ((currentUserApprover === "ap3" || currentUserPermissao === "master") && nextApStage === 2)) {
+                    approveButton.classList.remove('disabled');
+                } else {
+                    approveButton.classList.add('disabled'); // Not their stage or already approved
+                }
+            } else {
+                approveButton.classList.add('disabled'); // Solicitante cannot approve
+            }
+
+            // Reprove button logic
+            if (currentUserPermissao === "solicitante") {
+                reproveButton.classList.add('disabled');
+            } else {
+                // Reprove button is enabled if not already reproved/RM and user has permission
+                reproveButton.classList.remove('disabled');
+            }
+        });
+    }
+
+    // New function to export both tables to a single Excel file
+    function exportToExcel() {
+        if (!(currentUserPermissao === "admin" || currentUserPermissao === "mista")) {
+            alert("Você não tem permissão para exportar para Excel.");
+            return;
+        }
+
+        const wb = XLSX.utils.book_new();
+
+        // Export Requests Table
+        const requestsTable = document.getElementById("requestsTable");
+        const requestsHeader = Array.from(requestsTable.querySelectorAll("thead th")).map(th => th.textContent.trim());
+        const requestsData = [];
+        requestsTable.querySelectorAll("tbody tr").forEach(row => {
+            const rowData = [];
+            Array.from(row.cells).forEach((cell, index) => {
+                // Exclude the "Ações" column (last column)
+                if (index < row.cells.length - 1) {
+                    let cellText = cell.textContent.trim();
+                    // Clean up status text for requests table
+                    if (index === 4) { // Status column
+                        cellText = cellText.replace(/[\u2713\u2717]/g, '').trim();
+                    }
+                    rowData.push(cellText);
+                }
+            });
+            requestsData.push(rowData);
+        });
+        const wsRequests = XLSX.utils.aoa_to_sheet([requestsHeader.slice(0, -1), ...requestsData]); // Exclude "Ações" header
+        XLSX.utils.book_append_sheet(wb, wsRequests, "Solicitações de Materiais");
+
+        // Export Compras Table
+        const comprasTable = document.getElementById("comprasTable");
+        const comprasHeader = Array.from(comprasTable.querySelectorAll("thead th")).map(th => th.textContent.trim());
+        const comprasData = [];
+        comprasTable.querySelectorAll("tbody tr").forEach(row => {
+            const rowData = [];
+            Array.from(row.cells).forEach((cell, index) => {
+                // Exclude the "Ações" column (last column)
+                if (index < row.cells.length - 1) {
+                    let cellText = cell.textContent.trim();
+                    // Clean up status text for compras table
+                    if (index === 4) { // Status column
+                        cellText = cellText.replace(/[\u2713\u2717]/g, '').trim();
+                    }
+                    rowData.push(cellText);
+                }
+            });
+            comprasData.push(rowData);
+        });
+        const wsCompras = XLSX.utils.aoa_to_sheet([comprasHeader.slice(0, -1), ...comprasData]); // Exclude "Ações" header
+        XLSX.utils.book_append_sheet(wb, wsCompras, "Solicitações de Compras");
+
+        XLSX.writeFile(wb, "Solicitacoes_KAEFER_Teckma.xlsx");
+        showFeedback("Dados exportados para Excel!", "bg-green-100", "text-green-700");
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const solicitanteInput = document.getElementById("solicitante");
+        const nomeSolicitanteHidden = document.getElementById("nomeSolicitante");
+
+        // This part is now handled by the login function setting solicitante.value
+        // and nomeSolicitante.value directly based on the logged-in user's full name.
+        // The original prompt logic for the select element is no longer directly applicable
+        // as the solicitante input is readonly and filled by the login.
+    });
+
+</script>
+<!-- Modal do Dashboard -->
+<div class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" id="dashboardScreen">
+<div class="bg-white p-6 rounded-lg shadow-xl max-w-3xl w-full overflow-y-auto max-h-[90vh] relative">
+<button class="absolute top-3 right-3 text-gray-500 hover:text-red-600 text-xl font-bold" onclick="fecharDashboard()">
+      ×
+    </button>
+<h2 class="text-xl font-bold text-gray-800 mb-4">📊 Dashboard - Visão Geral</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="bg-gray-100 p-4 rounded shadow">
+<h3 class="text-lg font-semibold mb-2 text-[#0072B8]">Resumo de Solicitações</h3>
+<p>Total: <span class="font-bold" id="totalSolicitacoes"></span></p>
+<p>Entregues: <span class="text-green-700 font-semibold" id="entreguesSolicitacoes"></span></p>
+<p>Canceladas: <span class="text-red-700 font-semibold" id="canceladasSolicitacoes"></span></p>
+<p>Pendentes: <span class="text-yellow-700 font-semibold" id="pendentesSolicitacoes"></span></p>
+<div class="mt-4">
+<canvas id="solicitacoesChart"></canvas>
+</div>
+</div>
+<div class="bg-gray-100 p-4 rounded shadow">
+<h3 class="text-lg font-semibold mb-2 text-[#0072B8]">Estoque</h3>
+<p>Itens totais: <span class="font-bold" id="totalItensEstoque"></span></p>
+<p>Itens com estoque baixo (≤ 5): <span class="text-red-700 font-semibold" id="itensBaixosEstoque"></span></p>
+<p>Itens entregues: <span class="text-blue-700 font-semibold" id="totalItensEntregues"></span></p>
+<div class="mt-4">
+<div class="text-center mb-4" id="resumoEstoqueDinamico">
+<h3 class="text-lg font-semibold text-gray-800">Resumo do Estoque</h3>
+<div class="flex justify-center gap-4 mt-2 text-sm">
+<span class="text-blue-700 font-semibold" id="estoqueTotal">📦 Itens totais: 0</span>
+<span class="text-yellow-600 font-semibold" id="estoqueBaixo">⚠️ Estoque baixo (≤ 5): 0</span>
+<span class="text-green-600 font-semibold" id="estoqueEntregues">✅ Itens entregues: 0</span>
+</div>
+</div>
+<canvas id="estoqueChart"></canvas>
+</div>
+</div>
+</div>
+</div>
+</div></div>
+<!-- ===== Dashboard Container (Keeps existing charts; adds 3 new ones) ===== -->
+<div id="dashboard-container" class="hidden fixed inset-0 z-50 bg-black/50">
+  <div class="bg-white max-w-6xl mx-auto my-8 p-4 rounded-xl shadow-xl relative">
+    <button class="absolute top-3 right-3 text-gray-500 hover:text-red-600 text-2xl leading-none" onclick="fecharDashboard()">×</button>
+    <h3 class="text-2xl font-bold text-[#0072B8] flex items-center gap-2 mb-4">
+      <i class="fa-solid fa-chart-line"></i> Dashboard
+    </h3>
+
+    <!-- Área com rolagem para agrupar TODOS os gráficos -->
+    <div id="dashboardGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[70vh] overflow-y-auto pr-2 auto-rows-fr">
+
+      <!-- NOVO: Tempo médio de aprovação por aprovador -->
+      <div class="dashboard-card bg-[#E3F2FD] rounded-xl p-3 shadow border border-gray-200 min-h-[260px]">
+        <h4 class="text-[#003d66] font-semibold mb-2 text-sm">Tempo médio de aprovação por aprovador</h4><!--order1-->
+        <canvas id="tempoAprovacaoChart" height="200"></canvas>
+      </div>
+
+      <!-- NOVO: Quem mais solicita material -->
+      <div class="dashboard-card bg-[#E3F2FD] rounded-xl p-3 shadow border border-gray-200 min-h-[260px]">
+        <h4 class="text-[#003d66] font-semibold mb-2 text-sm">Quem mais solicita material</h4><!--order2-->
+        <canvas id="topSolicitantesChart" height="200"></canvas>
+      </div>
+
+      <!-- NOVO: Distribuição por prioridade -->
+      <div class="dashboard-card bg-[#E3F2FD] rounded-xl p-3 shadow border border-gray-200 min-h-[260px]">
+        <h4 class="text-[#003d66] font-semibold mb-2 text-sm">Distribuição por prioridade</h4><!--order3-->
+        <canvas id="prioridadesChart" height="200"></canvas>
+      </div>
+
+      
+      <!-- NOVO: Resumo do Estoque em gráfico de barras -->
+      <div class="dashboard-card bg-[#E3F2FD] rounded-xl p-3 shadow border border-gray-200 min-h-[260px]">
+        <h4 class="text-[#003d66] font-semibold mb-2 text-sm">Resumo do Estoque</h4>
+        <canvas id="resumoEstoqueChart" height="200"></canvas>
+      </div>
+
+      <!-- Observação: Gráficos EXISTENTES do seu arquivo permanecem inalterados.
+           Se já houver outros canvases, eles continuarão funcionando normalmente.
+           Esta área com rolagem serve para reuni-los visualmente. -->
+
+      <!-- NOVO: Resumo do Estoque (barras) -->
+      <div class="dashboard-card bg-[#E3F2FD] rounded-xl p-3 shadow border border-gray-200 min-h-[260px]">
+        <h4 class="text-[#003d66] font-semibold mb-2 text-sm">Resumo do estoque</h4><!--order4-->
+        <canvas id="resumoEstoqueChart" height="200"></canvas>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== Charts Helpers (não removem nada existente) =====================
+window._chartsRegistry = window._chartsRegistry || {};
+
+function _destroyIfExists(id) {
+  if (window._chartsRegistry[id]) {
+    window._chartsRegistry[id].destroy();
+    delete window._chartsRegistry[id];
+  }
+}
+
+function abrirDashboard() {
+  try { window.ensureLegacyCards && window.ensureLegacyCards(); } catch(e){}
+  try { requestAnimationFrame(()=>requestAnimationFrame(()=>{ window.renderSolicitacoesChart && window.renderSolicitacoesChart(); window.renderEstoqueChart && window.renderEstoqueChart(); })); } catch(e){}
+  try { window.ensureLegacyCards && window.ensureLegacyCards(); } catch(e) { console.error(e); }
+  try { _moveLegacyToDashboard(); } catch(e) { console.error(e); }
+  try { renderAllNewCharts(); } catch(e) { console.error(e); }
+    try { window.renderSolicitacoesChart && window.renderSolicitacoesChart(); } catch(e) { console.error(e); }
+    try { window.renderEstoqueChart && window.renderEstoqueChart(); } catch(e) { console.error(e); }
+    try { window.renderSolicitacoesChart && window.renderSolicitacoesChart(); } catch(e) { console.error(e); }
+    try { window.renderEstoqueChart && window.renderEstoqueChart(); } catch(e) { console.error(e); }
+    try { _updateKpisResumo(); } catch(e) { console.error(e); }
+    try { _renderResumoEstoqueChart(); } catch(e) { console.error(e); }
+  try { _dedupeResumoEstoqueCard(); } catch(e) { console.error(e); }
+  try { _renderResumoEstoqueChart(); } catch(e) { console.error(e); }
+  try { _dedupeResumoEstoqueCard(); } catch(e) { console.error(e); }
+  try { _ensureLegacyRendered(); } catch(e) { console.error(e); }
+  try { window.renderSolicitacoesChart && window.renderSolicitacoesChart(); } catch(e) { console.error(e); }
+  try { window.renderEstoqueChart && window.renderEstoqueChart(); } catch(e) { console.error(e); }
+  try { _updateKpisResumo(); } catch(e) { console.error(e); }
+  try { _renderResumoEstoqueChart(); } catch(e) { console.error(e); }
+  try { _dedupeResumoEstoqueCard(); } catch(e) { console.error(e); }
+  try { _renderResumoEstoqueChart(); } catch(e) { console.error(e); }
+  try { _dedupeResumoEstoqueCard(); } catch(e) { console.error(e); }
+  const el = document.getElementById('dashboard-container');
+  if (el) el.classList.remove('hidden');
+  // Renderiza/atualiza os novos gráficos sem afetar os antigos
+  try { renderAllNewCharts(); } catch (e) { console.error(e); }
+}
+
+function fecharDashboard() {
+  try { _returnLegacyFromDashboard(); } catch(e) { console.error(e); }
+  const el = document.getElementById('dashboard-container');
+  if (el) el.classList.add('hidden');
+}
+
+// ===================== Coleta de Dados =====================
+
+// Stamp e tracking de tempos de aprovação na tabela de compras
+// Armazenamos no localStorage: comprasTimes = { [id]: { createdAt, ap1, ap2, ap3 } }
+const TIMES_KEY = 'comprasTimes';
+function _loadTimes() {
+  try { return JSON.parse(localStorage.getItem(TIMES_KEY)) || {}; } catch { return {}; }
+}
+function _saveTimes(obj) {
+  localStorage.setItem(TIMES_KEY, JSON.stringify(obj));
+}
+
+// Garante que cada linha da tabela de compras tenha um createdAt
+function _stampComprasCreatedAtIfMissing() {
+  const times = _loadTimes();
+  const tbody = document.getElementById('comprasTableBody');
+  if (!tbody) return;
+  [...tbody.querySelectorAll('tr')].forEach(tr => {
+    const idCell = tr.cells?.[0];
+    if (!idCell) return;
+    const id = (idCell.textContent || '').trim();
+    if (!id) return;
+    if (!times[id]) times[id] = {};
+    if (!times[id].createdAt) {
+      times[id].createdAt = Date.now();
+    }
+  });
+  _saveTimes(times);
+}
+
+// Captura cliques de aprovação e salva tempo por papel do aprovador atual
+(function _wireComprasApprovalsTracking(){
+  document.addEventListener('click', function(ev){
+    const target = ev.target;
+    // Botões de aprovação têm classe .icon-btn.aprove (conforme seu CSS)
+    if (target && target.classList && target.classList.contains('aprove')) {
+      const tr = target.closest('tr');
+      const id = tr && tr.cells && tr.cells[0] ? (tr.cells[0].textContent || '').trim() : null;
+      if (!id) return;
+      const times = _loadTimes();
+      if (!times[id]) times[id] = {};
+      // Usa o papel do usuário logado já existente no seu código
+      let stage = (typeof currentUserApprover === 'string' && currentUserApprover) ? currentUserApprover.toLowerCase() : '';
+      // fallback: se admin/mista/master aprova, não há stage específico — marcamos 'admin'
+      if (!stage) {
+        stage = (currentUserPermissao || 'admin').toLowerCase(); // admin, mista, master
+      }
+      // Normaliza para chaves de gráfico
+      if (['ap1','ap2','ap3'].indexOf(stage) === -1) {
+        stage = 'admin';
+      }
+      if (!times[id][stage]) {
+        times[id][stage] = Date.now();
+        _saveTimes(times);
+      }
+    }
+  });
+})();
+
+// Roda de tempos em tempos para marcar createdAt em novas linhas geradas por outras funções
+setInterval(_stampComprasCreatedAtIfMissing, 2000);
+
+// Dados: Quem mais solicita material + prioridades (a partir da tabela de materiais)
+function _collectFromMateriais() {
+  const solicitantesCount = {};
+  const prioridadesCount = { 'Alta':0, 'Média':0, 'Baixa':0 };
+  const tbody = document.getElementById('requestsTableBody');
+  if (!tbody) return { solicitantesCount, prioridadesCount };
+
+  [...tbody.querySelectorAll('tr')].forEach(tr => {
+    const solicitante = tr.getAttribute('data-solicitante') || tr.cells?.[5]?.textContent?.trim() || '';
+    if (solicitante) {
+      solicitantesCount[solicitante] = (solicitantesCount[solicitante] || 0) + 1;
+    }
+    const prioridade = tr.cells?.[3]?.textContent?.trim() || '';
+    if (prioridade.includes('Alta')) prioridadesCount['Alta'] += 1;
+    else if (prioridade.includes('Média')) prioridadesCount['Média'] += 1;
+    else if (prioridade.includes('Baixa')) prioridadesCount['Baixa'] += 1;
+  });
+
+  return { solicitantesCount, prioridadesCount };
+}
+
+// Dados: Tempo médio de aprovação por aprovador (AP1/AP2/AP3/admin)
+function _collectTempoAprovacaoMedio() {
+  const times = _loadTimes();
+  const buckets = { ap1: [], ap2: [], ap3: [], admin: [] };
+  Object.entries(times).forEach(([id, t]) => {
+    const created = t.createdAt;
+    if (!created) return;
+    ['ap1','ap2','ap3','admin'].forEach(stage => {
+      if (t[stage]) {
+        const diffMs = t[stage] - created;
+        if (diffMs >= 0) buckets[stage].push(diffMs);
+      }
+    });
+  });
+  function avgHours(arr){ 
+    if (!arr.length) return 0;
+    const ms = arr.reduce((a,b)=>a+b,0)/arr.length;
+    return ms / 3600000; // horas
+  }
+  return {
+    labels: ['AP1','AP2','AP3'],
+    data: [ avgHours(buckets.ap1), avgHours(buckets.ap2), avgHours(buckets.ap3) ]
+  };
+}
+
+// ===================== Renderização dos NOVOS gráficos =====================
+function renderAllNewCharts() {
+  // 1) Tempo médio de aprovação por aprovador
+  const tempoCfg = _collectTempoAprovacaoMedio();
+  const elTempo = document.getElementById('tempoAprovacaoChart');
+  if (elTempo && window.Chart) {
+    _destroyIfExists('tempoAprovacaoChart');
+    window._chartsRegistry['tempoAprovacaoChart'] = new Chart(elTempo.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: tempoCfg.labels,
+        datasets: [{
+          label: 'Tempo médio (h)',
+          data: tempoCfg.data,
+          backgroundColor: __kaeferPalette.brandBlue,
+          borderColor: __kaeferPalette.brandBlue,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          tooltip: { enabled: true },
+          legend: { display: true }
+        },
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: 'Horas' } }
+        }
+      }
+    });
+  }
+
+  // 2) Quem mais solicita material (Top N)
+  const { solicitantesCount, prioridadesCount } = _collectFromMateriais();
+  const topEntries = Object.entries(solicitantesCount).sort((a,b)=>b[1]-a[1]).slice(0, 10);
+  const elTop = document.getElementById('topSolicitantesChart');
+  if (elTop && window.Chart) {
+    _destroyIfExists('topSolicitantesChart');
+    window._chartsRegistry['topSolicitantesChart'] = new Chart(elTop.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: topEntries.map(e=>e[0]),
+        datasets: [{
+          label: 'Solicitações',
+          data: topEntries.map(e=>e[1]),
+          backgroundColor: __kaeferPalette.brandBlue,
+          borderColor: __kaeferPalette.brandBlue,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: {
+          tooltip: { enabled: true },
+          legend: { display: false }
+        },
+        scales: {
+          x: { beginAtZero: true, title: { display: true, text: 'Qtd' } }
+        }
+      }
+    });
+  }
+
+  // 3) Distribuição por prioridade
+  const elPri = document.getElementById('prioridadesChart');
+  if (elPri && window.Chart) {
+    _destroyIfExists('prioridadesChart');
+    window._chartsRegistry['prioridadesChart'] = new Chart(elPri.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Alta','Média','Baixa'],
+        datasets: [{
+          label: 'Solicitações',
+          data: [prioridadesCount['Alta']||0, prioridadesCount['Média']||0, prioridadesCount['Baixa']||0],
+          backgroundColor: [__kaeferPalette.brandBlue, __kaeferPalette.brandRed, __kaeferPalette.brandYel],
+          borderColor: '#fff',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          tooltip: { enabled: true },
+          legend: { position: 'bottom' }
+        }
+      }
+    });
+  }
+}
+
+// Atualiza os gráficos automaticamente quando as tabelas mudarem de tamanho/conteúdo
+const _repaintObserver = new MutationObserver(() => {
+  const dashboard = document.getElementById('dashboard-container');
+  if (dashboard && !dashboard.classList.contains('hidden')) {
+    try { renderAllNewCharts(); } catch(e) { console.error(e); }
+    try { window.renderSolicitacoesChart && window.renderSolicitacoesChart(); } catch(e) { console.error(e); }
+    try { window.renderEstoqueChart && window.renderEstoqueChart(); } catch(e) { console.error(e); }
+    try { window.renderSolicitacoesChart && window.renderSolicitacoesChart(); } catch(e) { console.error(e); }
+    try { window.renderEstoqueChart && window.renderEstoqueChart(); } catch(e) { console.error(e); }
+    try { _updateKpisResumo(); } catch(e) { console.error(e); }
+    try { _renderResumoEstoqueChart(); } catch(e) { console.error(e); }
+  try { _dedupeResumoEstoqueCard(); } catch(e) { console.error(e); }
+  try { _renderResumoEstoqueChart(); } catch(e) { console.error(e); }
+  try { _dedupeResumoEstoqueCard(); } catch(e) { console.error(e); }
+  }
+});
+window.addEventListener('load', () => {
+  const reqBody = document.getElementById('requestsTableBody');
+  const compBody = document.getElementById('comprasTableBody');
+  if (reqBody) _repaintObserver.observe(reqBody, { childList: true, subtree: true, characterData: true });
+  if (compBody) _repaintObserver.observe(compBody, { childList: true, subtree: true, characterData: true });
+  // primeira marcação de createdAt
+  _stampComprasCreatedAtIfMissing();
+});
+
+// ===================== Integração com GRÁFICOS ANTIGOS =====================
+// Move canvases antigos (fora do dashboard) para dentro do painel com o mesmo layout.
+// Depois, devolve ao lugar original ao fechar.
+
+window._legacyChartsCache = window._legacyChartsCache || null; // [{node, parent, nextSibling, cardDiv}]
+
+function _captureLegacyCanvases() {
+  if (window._legacyChartsCache) return window._legacyChartsCache;
+  const all = Array.from(document.querySelectorAll('canvas'));
+  const excludeIds = new Set(['tempoAprovacaoChart','topSolicitantesChart','prioridadesChart']);
+  const dashboard = document.getElementById('dashboard-container');
+  const legacy = [];
+  all.forEach(c => {
+    if (excludeIds.has(c.id)) return;
+    if (dashboard && dashboard.contains(c)) return; // já está no dashboard
+    // Ignora canvases invisíveis sem tamanho? (opcional)
+    legacy.append = undefined
+    legacy.append
+    legacy.push({
+      node: c,
+      parent: c.parentNode,
+      nextSibling: c.nextSibling
+    });
+  });
+  window._legacyChartsCache = legacy;
+  return legacy;
+}
+
+function _moveLegacyToDashboard() {
+  const legacy = _captureLegacyCanvases();
+  const grid = document.getElementById('dashboardGrid');
+  if (!grid) return;
+  legacy.forEach((item, idx) => {
+    if (!item.node || !item.parent) return;
+    // Cria um cartão visual no padrão
+    const card = document.createElement('div');
+    card.className = 'dashboard-card bg-[#E3F2FD] rounded-xl p-3 shadow border border-gray-200 min-h-[260px]';
+    // Título amigável
+    const title = document.createElement('h4');
+    title.className = 'text-[#003d66] font-semibold mb-2 text-sm';
+    title.textContent = item.node.getAttribute('data-title') 
+                        || item.node.id 
+                        || ('Gráfico ' + (idx+1));
+    card.appendChild(title);
+    // Move o canvas para dentro do card
+    card.appendChild(item.node);
+    grid.appendChild(card);
+    item.cardDiv = card; // para limpar depois
+  });
+}
+
+function _returnLegacyFromDashboard() {
+  const legacy = _captureLegacyCanvases();
+  legacy.forEach(item => {
+    if (!item || !item.node || !item.parent) return;
+    // Devolve ao local original
+    if (item.nextSibling && item.nextSibling.parentNode === item.parent) {
+        item.parent.insertBefore(item.node, item.nextSibling);
+      } else {
+        item.parent.appendChild(item.node);
+      }
+      if (item.cardDiv && item.cardDiv.parentNode) {
+        item.cardDiv.parentNode.removeChild(item.cardDiv);
+      }
+    // Python placeholder (we're editing JS string) - will be replaced properly below
+  });
+}
+
+
+function _ensureLegacyRendered() {
+  const grid = document.getElementById('dashboardGrid');
+  if (!grid || !window.Chart) return;
+
+  const legacyCards = Array.from(grid.querySelectorAll('div')).filter(div => {
+    // cards com título + canvas dentro, não são os três novos (já têm ids conhecidos)
+    const cv = div.querySelector('canvas');
+    return cv && !['tempoAprovacaoChart','topSolicitantesChart','prioridadesChart'].includes(cv.id);
+  });
+
+  legacyCards.forEach(div => {
+    const cv = div.querySelector('canvas');
+    if (!cv) return;
+
+    // Se já existir instância Chart.js, apenas forçar resize/update
+    const inst = Chart.getChart(cv);
+    if (inst) {
+      try { inst.resize(); inst.update(); } catch(e) { console.warn('resize legacy chart', e); }
+      return;
+    }
+
+    // Se não existe instância, tentamos criar automaticamente para ids conhecidos
+    const ctx = cv.getContext('2d');
+    if (!ctx) return;
+
+    // Helper: coleta status de solicitações
+    function _collectStatusCounts() {
+      const counts = { Pendente:0, Entregue:0, Cancelado:0 };
+      const tbody = document.getElementById('requestsTableBody');
+      if (!tbody) return counts;
+      [...tbody.querySelectorAll('tr')].forEach(tr => {
+        const st = (tr.getAttribute('data-status') || tr.cells?.[4]?.textContent || '').trim();
+        if (/entregue/i.test(st)) counts.Entregue += 1;
+        else if (/cancelado/i.test(st)) counts.Cancelado += 1;
+        else counts.Pendente += 1;
+      });
+      return counts;
+    }
+
+    // Helper: coleta top 10 menores estoques de 'materiais' (objeto já existente no escopo global)
+    function _collectLowStockTop() {
+      try {
+        const arr = Object.entries(materiais || {}).map(([code, m]) => ({ code, qtd: m.quantidade || 0 }));
+        arr.sort((a,b) => a.qtd - b.qtd);
+        return arr.slice(0, 10);
+      } catch { return []; }
+    }
+
+    if (cv.id === 'solicitacoesChart') {
+      const counts = _collectStatusCounts();
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Pendente','Entregue','Cancelado'],
+          datasets: [{
+            label: 'Solicitações',
+            data: [counts.Pendente, counts.Entregue, counts.Cancelado],
+            backgroundColor: [__kaeferPalette.brandYel, __kaeferPalette.brandGreen, __kaeferPalette.brandRed],
+            borderColor: [__kaeferPalette.brandYel, __kaeferPalette.brandGreen, __kaeferPalette.brandRed],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false }, tooltip: { enabled: true } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+      // Ajusta título do card, se não tiver data-title
+      const titleEl = div.querySelector('h4');
+      if (titleEl && (!cv.getAttribute('data-title') || titleEl.textContent === cv.id)) {
+        titleEl.textContent = 'Solicitações por status'; div.classList.add('order-5');
+      }
+    } else if (cv.id === 'estoqueChart') {
+      const top = _collectLowStockTop();
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: top.map(o => o.code),
+          datasets: [{
+            label: 'Qtd em estoque',
+            data: top.map(o => o.qtd),
+            backgroundColor: __kaeferPalette.brandBlue,
+            borderColor: __kaeferPalette.brandBlue,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          plugins: { legend: { display: false }, tooltip: { enabled: true } },
+          scales: { x: { beginAtZero: true } }
+        }
+      });
+      const titleEl = div.querySelector('h4');
+      if (titleEl && (!cv.getAttribute('data-title') || titleEl.textContent === cv.id)) {
+        titleEl.textContent = 'Top 10 menores estoques'; div.classList.add('order-6');
+      }
+    }
+  });
+}
+
+
+function _updateKpisResumo() {
+  try {
+    const itensTotais = Object.keys(materiais || {}).length;
+
+    let estoqueBaixo = 0;
+    const threshold = typeof LOW_STOCK_THRESHOLD !== 'undefined' ? LOW_STOCK_THRESHOLD : 5;
+    Object.values(materiais || {}).forEach(m => {
+      const q = parseInt(m.quantidade || 0, 10);
+      if (!isNaN(q) && q <= threshold) estoqueBaixo++;
+    });
+
+    let entregues = 0;
+    const tbody = document.getElementById('requestsTableBody');
+    if (tbody) {
+      [...tbody.querySelectorAll('tr')].forEach(tr => {
+        const st = (tr.getAttribute('data-status') || tr.cells?.[4]?.textContent || '').trim();
+        if (/entregue/i.test(st)) entregues++;
+      });
+    }
+
+    const elTotais = document.getElementById('kpiItensTotais');
+    const elBaixo  = document.getElementById('kpiEstoqueBaixo');
+    const elEnt    = document.getElementById('kpiItensEntregues');
+    if (elTotais) elTotais.textContent = String(itensTotais);
+    if (elBaixo)  elBaixo.textContent  = String(estoqueBaixo);
+    if (elEnt)    elEnt.textContent    = String(entregues);
+  } catch(e) {
+    console.error('Falha ao atualizar KPIs', e);
+  }
+}
+
+
+function _renderResumoEstoqueChart() {
+  const el = document.getElementById('resumoEstoqueChart');
+  if (!el || !window.Chart) return;
+
+  // Destroy if exists
+  if (window._chartsRegistry && window._chartsRegistry['resumoEstoqueChart']) {
+    window._chartsRegistry['resumoEstoqueChart'].destroy();
+    delete window._chartsRegistry['resumoEstoqueChart'];
+  }
+
+  const itensTotais = Object.keys(materiais || {}).length;
+
+  let estoqueBaixo = 0;
+  const threshold = typeof LOW_STOCK_THRESHOLD !== 'undefined' ? LOW_STOCK_THRESHOLD : 5;
+  Object.values(materiais || {}).forEach(m => {
+    const q = parseInt(m.quantidade || 0, 10);
+    if (!isNaN(q) && q <= threshold) estoqueBaixo++;
+  });
+
+  let entregues = 0;
+  const tbody = document.getElementById('requestsTableBody');
+  if (tbody) {
+    [...tbody.querySelectorAll('tr')].forEach(tr => {
+      const st = (tr.getAttribute('data-status') || tr.cells?.[4]?.textContent || '').trim();
+      if (/entregue/i.test(st)) entregues++;
+    });
+  }
+
+  const ctx = el.getContext('2d');
+  window._chartsRegistry['resumoEstoqueChart'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Itens totais', 'Estoque baixo', 'Itens entregues'],
+      datasets: [{
+        label: 'Quantidade',
+        data: [itensTotais, estoqueBaixo, entregues],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: true }
+      },
+      scales: {
+        y: { beginAtZero: true, precision: 0 }
+      }
+    }
+  });
+}
+
+
+function _renderResumoEstoqueChart() {
+  const el = document.getElementById('resumoEstoqueChart');
+  if (!el || !window.Chart) return;
+  // Recalcula (mesma lógica dos KPIs, para garantir consistência)
+  const itensTotais = Object.keys(materiais || {}).length;
+  const threshold = typeof LOW_STOCK_THRESHOLD !== 'undefined' ? LOW_STOCK_THRESHOLD : 5;
+  let estoqueBaixo = 0;
+  Object.values(materiais || {}).forEach(m => {
+    const q = parseInt(m.quantidade || 0, 10);
+    if (!isNaN(q) && q <= threshold) estoqueBaixo++;
+  });
+  let entregues = 0;
+  const tbody = document.getElementById('requestsTableBody');
+  if (tbody) {
+    [...tbody.querySelectorAll('tr')].forEach(tr => {
+      const st = (tr.getAttribute('data-status') || tr.cells?.[4]?.textContent || '').trim();
+      if (/entregue/i.test(st)) entregues++;
+    });
+  }
+
+  if (window._chartsRegistry && window._chartsRegistry['resumoEstoqueChart']) {
+    try { window._chartsRegistry['resumoEstoqueChart'].destroy(); } catch {}
+    delete window._chartsRegistry['resumoEstoqueChart'];
+  }
+  const ctx = el.getContext('2d');
+  window._chartsRegistry = window._chartsRegistry || {};
+  window._chartsRegistry['resumoEstoqueChart'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Itens totais', 'Estoque baixo (≤ ' + threshold + ')', 'Itens entregues'],
+      datasets: [{
+        label: 'Qtd',
+        data: [itensTotais, estoqueBaixo, entregues],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false }, tooltip: { enabled: true } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+}
+
+
+function _dedupeResumoEstoqueCard() {
+  try {
+    const grid = document.getElementById('dashboardGrid');
+    if (!grid) return;
+    // all cards whose title matches "Resumo do estoque" (case-insensitive)
+    const cards = Array.from(grid.querySelectorAll('div')).filter(div => {
+      const h4 = div.querySelector('h4');
+      return h4 && /resumo do estoque/i.test(h4.textContent || '');
+    });
+    if (cards.length <= 1) return;
+    // keep the one that contains #resumoEstoqueChart
+    let keep = null;
+    cards.forEach(div => {
+      if (div.querySelector('#resumoEstoqueChart')) keep = div;
+    });
+    // if none specifically has the canvas, keep the first
+    if (!keep) keep = cards[0];
+    cards.forEach(div => {
+      if (div !== keep) {
+        div.parentNode && div.parentNode.removeChild(div);
+      }
+    });
+  } catch(e) { console.error('dedupe resumo card', e); }
+}
+
+
+// ===================== KAEFER Teckma Chart.js Theme =====================
+(function brandTheme(){
+  if (!window.Chart) return;
+  const styles = getComputedStyle(document.documentElement);
+  const brandBlue  = styles.getPropertyValue('--kaefer-blue').trim() || '#0072B8';
+  const brandRed   = styles.getPropertyValue('--kaefer-red').trim() || '#D32F2F';
+  const brandYel   = styles.getPropertyValue('--kaefer-yellow').trim() || '#FFC107';
+  const brandGreen = styles.getPropertyValue('--kaefer-green').trim() || '#388E3C';
+  const gridColor  = 'rgba(0,0,0,0.08)';
+  Chart.defaults.font.family = "'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'";
+  Chart.defaults.color = '#003d66';
+  Chart.defaults.borderColor = gridColor;
+  Chart.defaults.plugins.legend.labels.boxWidth = 14;
+  window.__kaeferPalette = { brandBlue, brandRed, brandYel, brandGreen, gridColor };
+})();
+
+</script>
+
+
+<script>
+(function() {
+  function forceResumoColors() {
+    try {
+      var el = document.getElementById('resumoEstoqueChart');
+      if (!el || !window.Chart) return;
+      var ch = Chart.getChart(el);
+      if (!ch || !ch.data || !ch.data.datasets || !ch.data.datasets.length) return;
+      var ds = ch.data.datasets[0];
+      ds.backgroundColor = ['#0072B8', '#D32F2F', '#388E3C'];
+      ds.borderColor = ['#0072B8', '#D32F2F', '#388E3C'];
+      ds.hoverBackgroundColor = ['#0072B8', '#D32F2F', '#388E3C'];
+      ds.hoverBorderColor = ['#0072B8', '#D32F2F', '#388E3C'];
+      ch.update('none');
+    } catch(e) { console.error('forceResumoColors', e); }
+  }
+  // run after load
+  window.addEventListener('load', forceResumoColors);
+  // also patch the global render function if it exists
+  var _oldRenderResumo = window._renderResumoEstoqueChart;
+  window._renderResumoEstoqueChart = function() {
+    if (typeof _oldRenderResumo === 'function') {
+      _oldRenderResumo.apply(this, arguments);
+    }
+    forceResumoColors();
+  };
+  // and on visibility changes caused by our MutationObserver
+  var _oldRenderAll = window.renderAllNewCharts;
+  if (typeof _oldRenderAll === 'function') {
+    window.renderAllNewCharts = function() {
+      _oldRenderAll.apply(this, arguments);
+      forceResumoColors();
+    };
+  }
+})();
+</script>
+
+
+<script>
+(function(){
+  function ensureLegacyCards() {
+    const grid = document.getElementById('dashboardGrid');
+    if (!grid) return;
+    function makeCard(title, id) {
+      const wrap = document.createElement('div');
+      wrap.className = 'dashboard-card bg-[#E3F2FD] rounded-xl p-3 shadow border border-gray-200 min-h-[260px]';
+      const h = document.createElement('h4');
+      h.className = 'text-[#003d66] font-semibold mb-2 text-sm';
+      h.textContent = title;
+      const cv = document.createElement('canvas');
+      cv.id = id;
+      cv.height = 200;
+      wrap.appendChild(h); wrap.appendChild(cv);
+      grid.appendChild(wrap);
+      return cv;
+    }
+    if (!document.getElementById('solicitacoesChart')) {
+      makeCard('Solicitações por status', 'solicitacoesChart');
+    }
+    if (!document.getElementById('estoqueChart')) {
+      makeCard('Top 10 menores estoques', 'estoqueChart');
+    }
+  }
+  window.ensureLegacyCards = ensureLegacyCards;
+})();
+</script>
+
+
+<script>
+(function(){
+  function _statusCounts(){
+    const counts = { Pendente:0, Entregue:0, Cancelado:0 };
+    const tbody = document.getElementById('requestsTableBody');
+    if (!tbody) return counts;
+    [...tbody.querySelectorAll('tr')].forEach(tr => {
+      const stAttr = (tr.getAttribute('data-status')||'').toLowerCase();
+      let txt = stAttr;
+      if (!txt && tr.cells && tr.cells[4]) txt = (tr.cells[4].textContent||'').toLowerCase();
+      if (txt.includes('entregue')) counts.Entregue += 1;
+      else if (txt.includes('cancel')) counts.Cancelado += 1;
+      else counts.Pendente += 1;
+    });
+    return counts;
+  }
+  function _topLowStock(){
+    try {
+      const arr = Object.entries(window.materiais || {}).map(([code, m])=>({ code, qtd: Number(m.quantidade)||0 }));
+      arr.sort((a,b)=>a.qtd-b.qtd);
+      return arr.slice(0,10);
+    } catch(e){ return []; }
+  }
+
+  window.renderSolicitacoesChart = function(){
+    const el = document.getElementById('solicitacoesChart');
+    if (!el || !window.Chart) return;
+    const ctx = el.getContext('2d');
+    const counts = _statusCounts();
+    const data = [counts.Pendente, counts.Entregue, counts.Cancelado];
+    const labels = ['Pendente','Entregue','Cancelado'];
+    const inst = Chart.getChart(el);
+    const cfg = {
+      type: 'bar',
+      data: { labels, datasets: [{
+        label: 'Solicitações',
+        data,
+        backgroundColor: [__kaeferPalette?.brandYel || '#FFC107', __kaeferPalette?.brandGreen || '#388E3C', __kaeferPalette?.brandRed || '#D32F2F'],
+        borderColor: [__kaeferPalette?.brandYel || '#FFC107', __kaeferPalette?.brandGreen || '#388E3C', __kaeferPalette?.brandRed || '#D32F2F'],
+        borderWidth: 1
+      }]},
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    };
+    if (inst){ inst.data = cfg.data; inst.update(); } else { new Chart(ctx, cfg); }
+    const h = el.closest('.dashboard-card')?.querySelector('h4'); if (h) h.textContent = 'Solicitações por status';
+  };
+
+  window.renderEstoqueChart = function(){
+    const el = document.getElementById('estoqueChart');
+    if (!el || !window.Chart) return;
+    const ctx = el.getContext('2d');
+    const top = _topLowStock();
+    const labels = top.length ? top.map(o=>o.code) : ['—'];
+    const values = top.length ? top.map(o=>o.qtd) : [0];
+    const inst = Chart.getChart(el);
+    const cfg = {
+      type: 'bar',
+      data: { labels, datasets: [{
+        label: 'Qtd em estoque',
+        data: values,
+        backgroundColor: __kaeferPalette?.brandBlue || '#0072B8',
+        borderColor: __kaeferPalette?.brandBlue || '#0072B8',
+        borderWidth: 1
+      }]},
+      options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+    };
+    if (inst){ inst.data = cfg.data; inst.update(); } else { new Chart(ctx, cfg); }
+    const h = el.closest('.dashboard-card')?.querySelector('h4'); if (h) h.textContent = 'Top 10 menores estoques';
+  };
+})();
+</script>
+
+</body>
+</html>
